@@ -87,80 +87,6 @@ class Player:
 		return finalStatus
 
 
-	# def setGrade(self,cardList):
-	# 	self.cardList = cardList
-	# 	newCardList = []
-	# 	for v in cardList:
-	# 		newCardList.append(cardValues[v][0]+cardValues[v][1])
-		# list.sort(newCardList)
-	# 	valueList = []
-	# 	suitList = []
-	# 	valueSuitList = []
-	# 	for a in newCardList:
-	# 		if a.find('z') == 0:
-	# 			valueList.append(14)
-	# 			if a.find('h') == 1:
-	# 				suitList.append('h')
-	# 			if a.find('d') == 1:
-	# 				suitList.append('d')
-	# 			if a.find('s') == 1:
-	# 				suitList.append('s')
-	# 			if a.find('c') == 1:
-	# 				suitList.append('c')
-	# 			continue
-	# 		if a.find('y') == 0:
-	# 			valueList.append(13)
-	# 			if a.find('h') == 1:
-	# 				suitList.append('h')
-	# 			if a.find('d') == 1:
-	# 				suitList.append('d')
-	# 			if a.find('s') == 1:
-	# 				suitList.append('s')
-	# 			if a.find('c') == 1:
-	# 				suitList.append('c')
-	# 			continue
-	# 		if a.find('x') == 0:
-	# 			valueList.append(12)
-	# 			if a.find('h') == 1:
-	# 				suitList.append('h')
-	# 			if a.find('d') == 1:
-	# 				suitList.append('d')
-	# 			if a.find('s') == 1:
-	# 				suitList.append('s')
-	# 			if a.find('c') == 1:
-	# 				suitList.append('c')
-	# 			continue
-	# 		if a.find('w') == 0:
-	# 			valueList.append(11)
-	# 			if a.find('h') == 1:
-	# 				suitList.append('h')
-	# 			if a.find('d') == 1:
-	# 				suitList.append('d')
-	# 			if a.find('s') == 1:
-	# 				suitList.append('s')
-	# 			if a.find('c') == 1:
-	# 				suitList.append('c')
-	# 			continue
-	# 		valueList.append(cardValues[a][2])
-	# 		suitList.append(cardValues[a][1])
-	# 	for v in suitList:
-	# 		if v == 'd':
-	# 			valueSuitList.append(1)
-	# 		if v == 's':
-	# 			valueSuitList.append(2)
-	# 		if v == 'c':
-	# 			valueSuitList.append(3)
-	# 		if v == 'h':
-	# 			valueSuitList.append(4)
-	# 	gradeScore = 0
-	# 	pokerHand = ""
-	# 	handArray = np.diff(valueList)
-	# 	suitArray = np.diff(valueSuitList)
-	# 	print(handArray," hand array")
-	# 	print(suitArray," suit array")
-        
-	# 	return gradeScore,pokerHand
-
 	def colFinalCards(self):
 		self.finalCards = [] 
 		for card in communityCards:
@@ -173,103 +99,238 @@ class Player:
 		# self.finalCards
 		self.score = 0
 		# self.pokerHand = ""
-		origCardList = self.finalCards
+		origCardList = []
+		for c in self.finalCards:
+			origCardList.append(c)
 		cardList = []
 		for v in origCardList:
 			cardList.append(cardValues[v][0]+cardValues[v][1])
-		# print(cardList)		
+		print(cardList)
+		return self.score
+
+	def checkFlush():
+	    tempDict = {'d':0,'h':0,'s':0,'c':0}
+	    for k in self.finalCards:
+	        for j in tempDict:
+	            if cardValues[k][1] == j:
+	                tempDict[j] += 1
+	    #r = checkMatches()
+	    for k in tempDict:
+	        if tempDict[k] >= 5:
+	            return k
+	        else:
+	            return False
+	        
+
+	def checkStrFlush(j):
+	    #suite = j
+	    suitedValues = []
+	    tempSuitedValues = []
+	    for k in self.finalCards:
+	        if cardValues[k][1] == j:
+	            suitedValues.append(cardValues[k][2])
+	            tempSuitedValues.append(cardValues[k][2])
+	    list.sort(suitedValues)
+	    list.sort(tempSuitedValues)
+	    if len(tempSuitedValues) >= 5:
+	        if tempSuitedValues[-1] == 14: # checks is there is an Ace
+	            tempSuitedValues.pop()
+	            #print(tempSuitedValues)
+	            checkList = [2,3,4,5]
+	            isLowStr = 0
+	            for k in checkList: # checks if the remaining four cards are 2,3,4,5
+	                if k not in tempSuitedValues:
+	                    #print("stop")
+	                    break
+	                else:
+	                    isLowStr += 1
+	            if isLowStr == 4:
+	                #print("lowest straight flsh")
+	                tempSuitedValues = checkList
+	                tempSuitedValues.append(1) # adds Ace with the value of 1
+	                list.sort(tempSuitedValues)
+	                suitedValues = tempSuitedValues
+	    oneCount = 0
+	    oneInRow = 0
+	    previousOne = 0
+	    #print(suitedValues)
+	    #print(np.diff(b))
+	    for i in np.diff(suitedValues): # when sorting and running np.diff, the array will be [1,1,1,1] if there is a straight
+	        if i == 1:
+	            oneCount += 1
+	            if previousOne == 1:
+	                oneInRow += 1
+	            previousOne = 1
+	        else:
+	            previousOne = 0
+	    if oneInRow >= 3:
+	        #print("this is a straight flsh")
+	        if len(suitedValues) == 5:
+	            pass
+	        if len(suitedValues) == 6:
+	            list.sort(suitedValues,reverse=True)
+	            suitedValues.pop()
+	        if len(suitedValues) == 7:
+	            list.sort(suitedValues,reverse=True)
+	            suitedValues.pop()
+	            suitedValues.pop()
+	        return suitedValues
+	        #self.score += ###### need to set the straight flush level score here
+	        
+	        #print("there's a straight flush")
+	    else:
+	        return False
+
+	def getValueList():
+		origCardList = self.finalCards # self..
+		cardList = []
+		for v in origCardList:
+			cardList.append(cardValues[v][0]+cardValues[v][1])
+		#print(cardList)		
 		valueList = []
-		suitList = []
-		valueSuitList = []
-		valueTupleList = []
-		suitStrFlsh = []
 		for a in cardList:
 			if a.find('z') == 0:
 				valueList.append(14)
-				if a.find('h') == 1:
-					suitList.append('h')
-				if a.find('d') == 1:
-					suitList.append('d')
-				if a.find('s') == 1:
-					suitList.append('s')
-				if a.find('c') == 1:
-					suitList.append('c')
 				continue
 			if a.find('y') == 0:
 				valueList.append(13)
-				if a.find('h') == 1:
-					suitList.append('h')
-				if a.find('d') == 1:
-					suitList.append('d')
-				if a.find('s') == 1:
-					suitList.append('s')
-				if a.find('c') == 1:
-					suitList.append('c')
 				continue
 			if a.find('x') == 0:
 				valueList.append(12)
-				if a.find('h') == 1:
-					suitList.append('h')
-				if a.find('d') == 1:
-					suitList.append('d')
-				if a.find('s') == 1:
-					suitList.append('s')
-				if a.find('c') == 1:
-					suitList.append('c')
 				continue
 			if a.find('w') == 0:
 				valueList.append(11)
-				if a.find('h') == 1:
-					suitList.append('h')
-				if a.find('d') == 1:
-					suitList.append('d')
-				if a.find('s') == 1:
-					suitList.append('s')
-				if a.find('c') == 1:
-					suitList.append('c')
 				continue
 			valueList.append(cardValues[a][2])
-			suitList.append(cardValues[a][1])
-		for v in suitList:
-			if v == 'd':
-				valueSuitList.append(1)
-			if v == 's':
-				valueSuitList.append(2)
-			if v == 'c':
-				valueSuitList.append(3)
-			if v == 'h':
-				valueSuitList.append(4)
-		try:
-			for s in range(7):
-				valueTupleList.append((valueList[s],valueSuitList[s]))
-		except IndexError:
-			pass
-		list.sort(valueTupleList)
-		#print(valueTupleList)
-		for s in valueTupleList:
-			suitStrFlsh.append(s[1])
-		list.sort(valueList)
-		list.sort(valueSuitList)
-		print(valueList,"   value list")
-		print(valueSuitList,"    value suitList")
-		print(suitStrFlsh,"    suitStrFlsh")
-		# gradeScore = 0
-		# self.pokerHand = ""
-		handArray = np.diff(valueList)
-		suitArray = np.diff(valueSuitList)
-		strFlshArray = np.diff(suitStrFlsh)
-		print(handArray,"  ==== hand array")
-		print(strFlshArray," ==== str Flush Array")
-		print(suitArray,"  ==== suit array")
-		# define how the array looks when there is a straight, flush. straight flush, pairs, trips or full house.
-		# Poker hands starting from highest
-		# royal flush, straight flush, four of a kind, full house, flush, straight, three of a kind, 2 pairs, 1 pair, high card
-		# royal flush hand array [# # 1 1 1 1] strFlshArray [# # 0 0 0 0] .. and sum of the numbers in straight == 60
-		# straight flush hand array [# # 1 1 1 1] strFlshArray [# # 0 0 0 0] or any 4 in a row hand == [# 1 1 1 1 #] and strFlshArray ==[# 0 0 0 0 #].. sum numbers in straight < 60
-		# four of a kind === [2,2,2,2,4,5]  hand array [0 0 0 0 # #] ... or any 4 zeros in a row example = [# 0 0 0 0 #]
-		# full house === [2,2,2,5,5,6,14] [0 0 3 0 1 8]
-		# self.score += gradeScore
-		return self.score
+		return valueList
+		#print(valueList,"   value list")
+	    
+	def checkMatches():
+	    b = getValueList()
+	    list.sort(b)
+	    zeroCount = 0
+	    zeroInRow = 0
+	    previousZero = 0
+	    #print(np.diff(b))
+	    for i in np.diff(b):
+	        if i == 0:
+	            zeroCount += 1
+	            if previousZero == 1:
+	                zeroInRow += 1
+	            previousZero = 1
+	        else:
+	            previousZero = 0
+	    if zeroCount == 3:
+	        if zeroInRow == 2:
+	            #print("four of a kind")
+	            #self.score += ##### four fo a king score
+	            return "FOAK" # four of a kind
+	        if zeroInRow == 1:
+	            #print("full house")
+	            #self.score += ##### full house score
+	            return "FH" # full house
+	        if zeroInRow == 0:
+	            if checkStr() == True:
+	                #print("there's a straight")
+	                return "STR" #straight
+	            else:
+	                #print("Two pair")
+	                #self.score += ##### two pair score
+	                return "TwoP" # two pair
+	    if zeroCount == 2:
+	        if zeroInRow == 1:
+	            if checkStr() == True:
+	                #print("there's a straight")
+	                return "STR" #straight
+	            else:
+	                #print("Three of a kind")
+	                #self.score += ##### three of a kind score
+	                return "Three" # three of a kind
+	        if zeroInRow == 0:
+	            if checkStr() == True:
+	                #print("there's a straight")
+	                return "STR" #straight
+	            else:
+	                #print("Two pair")
+	                #self.score += ##### two pair score
+	                return "TwoP" # two pair
+	    if zeroCount == 1:
+	        if checkStr() == True:
+	            #print("there's a straight")
+	            return "STR" #straight
+	        else:
+	            #print("One pair")
+	            #self.score += ##### One pair score
+	            return "OneP" # One pair
+	    if zeroCount == 0:
+	        if checkStr() == True:
+	            #print("there's a straight")
+	            return "STR" #straight
+	        else:
+	            #print("High Card")
+	            #self.score += ##### high card score
+	            return "High" # high
+	    #print(zeroCount," zerocount ",zeroInRow," inrow ")
+
+	def checkStr():
+	    values = []
+	    tempValues = []
+	    for i in getValueList():
+	        values.append(i)
+	        tempValues.append(i)
+	    list.sort(values)
+	    list.sort(tempValues)
+	    if tempValues[-1] == 14: # checks is there is an Ace
+	        tempValues.pop()
+	        #print(tempValues)
+	        checkList = [2,3,4,5]
+	        isLowStr = 0
+	        for k in checkList: # checks if the remaining four cards are 2,3,4,5
+	            if k not in tempValues:
+	                #print("stop")
+	                break
+	            else:
+	                isLowStr += 1
+	                #continue
+	                #time.sleep(3)
+	        if isLowStr == 4:
+	            #print("lowest straight")
+	            tempValues = checkList
+	            tempValues.append(1) # adds Ace with the value of 1
+	            list.sort(tempValues)
+	            values = tempValues
+	    #print(np.diff(values))
+	    #print(values)
+	    oneCount = 0
+	    oneInRow = 0
+	    previousOne = 0
+	    #print(np.diff(b))
+	    for i in np.diff(values): # when sorting and running np.diff, the array will be [1,1,1,1] if there is a straight
+	        if i == 1:
+	            oneCount += 1
+	            if previousOne == 1:
+	                oneInRow += 1
+	            previousOne = 1
+	        else:
+	            previousOne = 0
+	    if oneInRow >= 3:
+	        #print("this is a straight")
+	        if len(values) == 5:
+	            pass
+	        if len(values) == 6:
+	            list.sort(values,reverse=True)
+	            values.pop()
+	        if len(values) == 7:
+	            list.sort(values,reverse=True)
+	            values.pop()
+	            values.pop()
+	        return True
+	        #self.score += ###### need to set the straight level score here
+	        
+	        #print("there's a straight ")
+	    else:
+	        return False
+
 
 
 		
@@ -399,11 +460,20 @@ def betRound(highestBet=0, PlayerID=-1):
 	PlayerID = PlayerID
 	for r in circle_iter(activePlayers,PlayerID):
 		if r.folded == 0:
-		# print(r.name," do you want to check or raise")
-			print("\n\n",r.name," The current bet is ", highestBet,"\n\n")
+			os.system("cls")
+			if len(communityCards) == 6:
+				tempComcards = []
+				for c in communityCards:
+					tempComcards.append(c)
+				tempComcards.pop()
+				print("\n\n\n\nCOMMUNITY CARDS\n=========================\n",tempComcards,"\n=========================\n")
+			else:
+				print("\n\n\n\nCOMMUNITY CARDS\n=========================\n",communityCards,"\n=========================\n")
+			print("Call is on ",r.name,"\n")
+			print("PLAYERS CARDS\n=========================\n",r.hand,"\n=========================\n")
 			if r.bet == highestBet:
 				try:
-					playerFinalChoice = int(input("Choose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n"))
+					playerFinalChoice = int(input(r.name," choose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n"))
 					if 1 > playerFinalChoice or playerFinalChoice > 3:
 						raise ValueError
 				except Exception:
@@ -425,7 +495,7 @@ def betRound(highestBet=0, PlayerID=-1):
 					print("3 final choice")
 				time.sleep(1)
 			if r.bet < highestBet:
-				print("Do you want to call for ",highestBet - r.bet,", raise or fold?\n\nChoose and option.\n")
+				print(r.name," do you want to call for ",highestBet - r.bet,", raise or fold?\n\nChoose and option.\n")
 				try:
 					playerFinalChoice = int(input("[1] Call\n[2] Raise\n[3] Fold\n\n"))
 					if 1 > playerFinalChoice or playerFinalChoice > 3:
@@ -494,8 +564,10 @@ activePlayers["1"].isDealer = 1
 
 while(True):
 	if len(communityCards) == 5:
-		print(communityCards)
-		print("========= in the river=============")
+		os.system("cls")
+		print("\n\nDEALING THE RIVER\n\n")
+		time.sleep(2)
+		os.system("cls")
 		for d in activePlayers:
 			activePlayers[d].colFinalCards()
 			activePlayers[d].setScore()
@@ -511,8 +583,10 @@ while(True):
 		checkWin(haveFolded)
 		time.sleep(1)
 	if len(communityCards) == 4:
-		print("========= in the turn=============")
-		print(communityCards)
+		os.system("cls")
+		print("\n\nDEALING THE TURN\n\n")
+		time.sleep(2)
+		os.system("cls")
 		highestBet, PlayerID, haveFolded, totCount = checkBets()
 		totCount = 0
 		while totCount < len(activePlayers):
@@ -528,14 +602,16 @@ while(True):
 		# continue
 	if len(communityCards) == 3:
 		# 	break
-		print("========= in the flop=============")
-		print(communityCards)
+		os.system("cls")
+		print("\n\nDEALING THE FLOP\n\n")
+		time.sleep(2)
+		os.system("cls")
 		highestBet, PlayerID, haveFolded, totCount = checkBets()
 		totCount = 0
 		while totCount < len(activePlayers):
 			betRound(highestBet,PlayerID)
 			highestBet, PlayerID, haveFolded, totCount = checkBets()
-			print("highest bet = ",highestBet,"......... player ID = ", PlayerID, ".............have folded = ", haveFolded, "\n........total count = ", totCount,".......active players = ", len(activePlayers))
+			#print("highest bet = ",highestBet,"......... player ID = ", PlayerID, ".............have folded = ", haveFolded, "\n........total count = ", totCount,".......active players = ", len(activePlayers))
 		updateBalances()
 		checkWin(haveFolded)
 		cardDeck.pop() # burn card before turn
@@ -544,8 +620,10 @@ while(True):
 		# betRound()
 		# continue
 	if len(communityCards) < 3:
-		print("============this is preflop===============")
-		time.sleep(1)
+		os.system("cls")
+		print("\n\nDEALING PLAYERS CARDS\n\n")
+		time.sleep(2)
+		os.system("cls")
 		for p in activePlayers:
 			if activePlayers[p].isDealer == 1:
 				tempCount = 0
@@ -562,7 +640,7 @@ while(True):
 						else:
 							d.dealCard(cardDeck.pop())
 							# d.setScore()
-							print(d.hand,d.name,"       ",d.bet," = BET       ",d.money," = BALANCE        ",d.score," = score")
+							#print(d.hand,d.name,"       ",d.bet," = BET       ",d.money," = BALANCE        ",d.score," = score")
 							# time.sleep(1)
 				break
 		# print(communityCards)

@@ -6,7 +6,7 @@ Created on Wed Mar 25 11:29:18 2020
 """
 
 import numpy as np
-finalCards = ['Kd', '6h', 'Jd', 'Ad', 'Qd', '2c', '10d'] # royal flush
+#finalCards = ['Kd', '6h', 'Jd', 'Ad', 'Qd', '2c', '10d'] # royal flush
 #finalCards = ['3d', '8d', '5d', '2d', '4d', 'Ad', '9d'] # straight flush
 #finalCards = ['3d', '3c', '3s', '3h', '4d', 'Kc', 'Ah'] # four kind
 #finalCards = ['Ah', '3c', '3s', '3h', '4d', '2c', '3d'] # four kind
@@ -14,7 +14,7 @@ finalCards = ['Kd', '6h', 'Jd', 'Ad', 'Qd', '2c', '10d'] # royal flush
 #finalCards = ['3d', '3c', '3s', '8c', '4d', 'Kc', 'Ah'] # three kind
 #finalCards = ['2d', '3c', '3s', '3h', '4d', 'Kc', 'Ah'] # three kind
 #finalCards = ['3d', '3c', '8s', '8c', '4d', '4c', 'Ah'] # two pair x3
-#finalCards = ['3d', '3c', '8s', '8c', '4d', 'Kc', 'Ah'] # two pair
+finalCards = ['3d', '3c', '8s', '8c', '4d', 'Kc', 'Ah'] # two pair
 #finalCards = ['3d', '3c', '2s', '8c', '4d', 'Kc', 'Ah'] # one pair
 #finalCards = ['3d', '2c', '5s', '8c', '4d', 'Kc', '6h'] # straight
 #finalCards = ['3d', '2c', '5s', '8c', '4d', 'Kc', '9h'] # high card
@@ -23,9 +23,10 @@ finalCards = ['Kd', '6h', 'Jd', 'Ad', 'Qd', '2c', '10d'] # royal flush
 #finalCards = ['3d', '3c', '3s', '8c', '4d', 'Kc', 'Ah']
 cardValues = {'2h': ('2', 'h', 2), '3h': ('3', 'h', 3), '4h': ('4', 'h', 4), '5h': ('5', 'h', 5), '6h': ('6', 'h', 6), '7h': ('7', 'h', 7), '8h': ('8', 'h', 8), '9h': ('9', 'h', 9), '10h': ('10', 'h', 10), 'Jh': ('w', 'h', 11), 'Qh': ('x', 'h', 12), 'Kh': ('y', 'h', 13), 'Ah': ('z', 'h', 14), '2d': ('2', 'd', 2), '3d': ('3', 'd', 3), '4d': ('4', 'd', 4), '5d': ('5', 'd', 5), '6d': ('6', 'd', 6), '7d': ('7', 'd', 7), '8d': ('8', 'd', 8), '9d': ('9', 'd', 9), '10d': ('10', 'd', 10), 'Jd': ('w', 'd', 11), 'Qd': ('x', 'd', 12), 'Kd': ('y', 'd', 13), 'Ad': ('z', 'd', 14), '2s': ('2', 's', 2), '3s': ('3', 's', 3), '4s': ('4', 's', 4), '5s': ('5', 's', 5), '6s': ('6', 's', 6), '7s': ('7', 's', 7), '8s': ('8', 's', 8), '9s': ('9', 's', 9), '10s': ('10', 's', 10), 'Js': ('w', 's', 11), 'Qs': ('x', 's', 12), 'Ks': ('y', 's', 13), 'As': ('z', 's', 14), '2c': ('2', 'c', 2), '3c': ('3', 'c', 3), '4c': ('4', 'c', 4), '5c': ('5', 'c', 5), '6c': ('6', 'c', 6), '7c': ('7', 'c', 7), '8c': ('8', 'c', 8), '9c': ('9', 'c', 9), '10c': ('10', 'c', 10), 'Jc': ('w', 'c', 11), 'Qc': ('x', 'c', 12), 'Kc': ('y', 'c', 13), 'Ac': ('z', 'c', 14)}
 
-tempDict = {'d':0,'h':0,'s':0,'c':0}
+
 
 def checkFlush():
+    tempDict = {'d':0,'h':0,'s':0,'c':0}
     for k in finalCards:
         for j in tempDict:
             if cardValues[k][1] == j:
@@ -33,39 +34,10 @@ def checkFlush():
     #r = checkMatches()
     for k in tempDict:
         if tempDict[k] >= 5:
-            if checkStrFlush(k) == True:
-                print("there's a straight flush")
-                 # self.score += #######  set the score for a straight or royal flush
-                return
-            else:
-                checkMatches()
-                print("check hgere")
-# =============================================================================
-#                 if r == "FOAK":
-#                     print("Four of a kind")
-#                     return
-#                 if r == "FH":
-#                     print("Full house")
-#                     return
-# =============================================================================
-                print("Flush")
-                return
-        #else:
-    checkMatches()
-# =============================================================================
-#     if r == "STR":
-#         print("Straight")
-#         #return
-#     if r == "TwoP":
-#         print("Two Pairss")
-#         #return
-#     if r == "OneP":
-#         print("One Pairss")
-#         #return
-#     if r == "High":
-#         print("high cardsss")
-#         #return
-# =============================================================================
+            return k
+        else:
+            return False
+        
 
 def checkStrFlush(j):
     #suite = j
@@ -80,17 +52,17 @@ def checkStrFlush(j):
     if len(tempSuitedValues) >= 5:
         if tempSuitedValues[-1] == 14: # checks is there is an Ace
             tempSuitedValues.pop()
-            print(tempSuitedValues)
+            #print(tempSuitedValues)
             checkList = [2,3,4,5]
             isLowStr = 0
             for k in checkList: # checks if the remaining four cards are 2,3,4,5
                 if k not in tempSuitedValues:
-                    print("stop")
+                    #print("stop")
                     break
                 else:
                     isLowStr += 1
             if isLowStr == 4:
-                print("lowest straight flsh")
+                #print("lowest straight flsh")
                 tempSuitedValues = checkList
                 tempSuitedValues.append(1) # adds Ace with the value of 1
                 list.sort(tempSuitedValues)
@@ -98,7 +70,7 @@ def checkStrFlush(j):
     oneCount = 0
     oneInRow = 0
     previousOne = 0
-    print(suitedValues)
+    #print(suitedValues)
     #print(np.diff(b))
     for i in np.diff(suitedValues): # when sorting and running np.diff, the array will be [1,1,1,1] if there is a straight
         if i == 1:
@@ -109,7 +81,7 @@ def checkStrFlush(j):
         else:
             previousOne = 0
     if oneInRow >= 3:
-        print("this is a straight flsh")
+        #print("this is a straight flsh")
         if len(suitedValues) == 5:
             pass
         if len(suitedValues) == 6:
@@ -119,7 +91,7 @@ def checkStrFlush(j):
             list.sort(suitedValues,reverse=True)
             suitedValues.pop()
             suitedValues.pop()
-        return True
+        return suitedValues
         #self.score += ###### need to set the straight flush level score here
         
         #print("there's a straight flush")
@@ -169,52 +141,52 @@ def checkMatches():
             previousZero = 0
     if zeroCount == 3:
         if zeroInRow == 2:
-            print("four of a kind")
+            #print("four of a kind")
             #self.score += ##### four fo a king score
-            #return "FOAK" # four of a kind
+            return "FOAK" # four of a kind
         if zeroInRow == 1:
-            print("full house")
+            #print("full house")
             #self.score += ##### full house score
             return "FH" # full house
         if zeroInRow == 0:
             if checkStr() == True:
-                print("there's a straight")
+                #print("there's a straight")
                 return "STR" #straight
             else:
-                print("Two pair")
+                #print("Two pair")
                 #self.score += ##### two pair score
                 return "TwoP" # two pair
     if zeroCount == 2:
         if zeroInRow == 1:
             if checkStr() == True:
-                print("there's a straight")
+                #print("there's a straight")
                 return "STR" #straight
             else:
-                print("Three of a kind")
+                #print("Three of a kind")
                 #self.score += ##### three of a kind score
                 return "Three" # three of a kind
         if zeroInRow == 0:
             if checkStr() == True:
-                print("there's a straight")
+                #print("there's a straight")
                 return "STR" #straight
             else:
-                print("Two pair")
+                #print("Two pair")
                 #self.score += ##### two pair score
                 return "TwoP" # two pair
     if zeroCount == 1:
         if checkStr() == True:
-            print("there's a straight")
+            #print("there's a straight")
             return "STR" #straight
         else:
-            print("One pair")
+            #print("One pair")
             #self.score += ##### One pair score
             return "OneP" # One pair
     if zeroCount == 0:
         if checkStr() == True:
-            print("there's a straight")
+            #print("there's a straight")
             return "STR" #straight
         else:
-            print("High Card")
+            #print("High Card")
             #self.score += ##### high card score
             return "High" # high
     #print(zeroCount," zerocount ",zeroInRow," inrow ")
@@ -241,7 +213,7 @@ def checkStr():
                 #continue
                 #time.sleep(3)
         if isLowStr == 4:
-            print("lowest straight")
+            #print("lowest straight")
             tempValues = checkList
             tempValues.append(1) # adds Ace with the value of 1
             list.sort(tempValues)
@@ -279,9 +251,12 @@ def checkStr():
         return False
 
 
-#checkFlush()
+
+print(checkMatches())
+#print(checkStrFlush("d"))
+#print(checkFlush())
 #checkStr()
-checkMatches()
+#checkMatches()
 #print(checkStr())
 
 
