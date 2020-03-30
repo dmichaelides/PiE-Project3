@@ -105,10 +105,15 @@ class Player:
 		cardList = []
 		for v in origCardList:
 			cardList.append(cardValues[v][0]+cardValues[v][1])
+		if self.checkStrFlush(self.checkFlush()) == True:
+			return "staightFlush"
+		if self.checkFlush() == True:
+			return "Flush"
+
 		print(cardList)
 		return self.score
 
-	def checkFlush():
+	def checkFlush(self):
 	    tempDict = {'d':0,'h':0,'s':0,'c':0}
 	    for k in self.finalCards:
 	        for j in tempDict:
@@ -122,7 +127,7 @@ class Player:
 	            return False
 	        
 
-	def checkStrFlush(j):
+	def checkStrFlush(self,j):
 	    #suite = j
 	    suitedValues = []
 	    tempSuitedValues = []
@@ -181,7 +186,7 @@ class Player:
 	    else:
 	        return False
 
-	def getValueList():
+	def getValueList(self):
 		origCardList = self.finalCards # self..
 		cardList = []
 		for v in origCardList:
@@ -205,7 +210,7 @@ class Player:
 		return valueList
 		#print(valueList,"   value list")
 	    
-	def checkMatches():
+	def checkMatches(self):
 	    b = getValueList()
 	    list.sort(b)
 	    zeroCount = 0
@@ -239,7 +244,7 @@ class Player:
 	                return "TwoP" # two pair
 	    if zeroCount == 2:
 	        if zeroInRow == 1:
-	            if checkStr() == True:
+	            if self.checkStr() == True:
 	                #print("there's a straight")
 	                return "STR" #straight
 	            else:
@@ -247,7 +252,7 @@ class Player:
 	                #self.score += ##### three of a kind score
 	                return "Three" # three of a kind
 	        if zeroInRow == 0:
-	            if checkStr() == True:
+	            if self.checkStr() == True:
 	                #print("there's a straight")
 	                return "STR" #straight
 	            else:
@@ -255,7 +260,7 @@ class Player:
 	                #self.score += ##### two pair score
 	                return "TwoP" # two pair
 	    if zeroCount == 1:
-	        if checkStr() == True:
+	        if self.checkStr() == True:
 	            #print("there's a straight")
 	            return "STR" #straight
 	        else:
@@ -263,7 +268,7 @@ class Player:
 	            #self.score += ##### One pair score
 	            return "OneP" # One pair
 	    if zeroCount == 0:
-	        if checkStr() == True:
+	        if self.checkStr() == True:
 	            #print("there's a straight")
 	            return "STR" #straight
 	        else:
@@ -272,7 +277,7 @@ class Player:
 	            return "High" # high
 	    #print(zeroCount," zerocount ",zeroInRow," inrow ")
 
-	def checkStr():
+	def checkStr(self):
 	    values = []
 	    tempValues = []
 	    for i in getValueList():
@@ -376,10 +381,10 @@ def updateBalances():
 		Pot += activePlayers[b].bet
 		activePlayers[b].bet = 0
 
-def checkWin(haveFolded = 0):
+def checkWin():
 	global Pot
 	highestScore = 0
-	foldedCount = haveFolded 
+	foldedCount = checkFolded() 
 	for s in activePlayers:
 		if activePlayers[s].score > highestScore:
 			highestScore = activePlayers[s].score
@@ -391,7 +396,13 @@ def checkWin(haveFolded = 0):
 				# we need to check the score
 				# if there is a tie, we need to split pot
 				activePlayers[w].money += Pot
+				os.system("cls")
 				print(activePlayers[w].name," wins ",Pot)
+				for i in range(5):
+					print(".")
+					time.sleep(1)
+				print("Starting new round.....")
+				time.sleep(2)
 				Pot = 0
 		resetRound()
 	if len(communityCards) == 6:
@@ -401,6 +412,13 @@ def checkWin(haveFolded = 0):
 			if activePlayers[w].score > highestScore - 1000:
 				print("....need to finish score code here .... ") # all players who qualify here split pot. 
 		resetRound()
+
+def checkFolded():
+	folded = 0
+	for f in activePlayers:
+		if activePlayers[f].folded == 1:
+			folded += 1
+	return folded
 
 def resetRound():
 	global communityCards,cardDeck
@@ -422,9 +440,10 @@ def resetRound():
 			b.folded = 1
 
 def checkBets():
+	# global haveFolded
 	highestBet = 0
 	PlayerID = -1
-	haveFolded = 0
+	# haveFolded = haveFolded()
 	betMatch = 0
 	totCount = 0
 	for s in activePlayers:
@@ -434,8 +453,8 @@ def checkBets():
 			PlayerID = int(s)
 		if activePlayers[s].isDealer == 1:
 			tempPlayerID = int(s)
-		if activePlayers[s].folded == 1:
-			haveFolded += 1
+		# if activePlayers[s].folded == 1:
+		# 	haveFolded += 1
 	for s in activePlayers:
 		if activePlayers[s].bet == highestBet and activePlayers[s].folded == 0:
 			betMatch += 1
@@ -452,74 +471,91 @@ def checkBets():
 			if tempCount == 1:
 				PlayerID = int(list(activePlayers.keys())[list(activePlayers.values()).index(k)])
 			tempCount += 1
-	totCount = haveFolded + betMatch
-	return highestBet, PlayerID, haveFolded, totCount
+	totCount = checkFolded() + betMatch
+	return highestBet, PlayerID, totCount
 
 def betRound(highestBet=0, PlayerID=-1):
 	highestBet = highestBet
 	PlayerID = PlayerID
+	# haveFolded = haveFolded()
 	for r in circle_iter(activePlayers,PlayerID):
-		if r.folded == 0:
-			os.system("cls")
-			if len(communityCards) == 6:
-				tempComcards = []
-				for c in communityCards:
-					tempComcards.append(c)
-				tempComcards.pop()
-				print("\n\n\n\nCOMMUNITY CARDS\n=========================\n",tempComcards,"\n=========================\n")
-			else:
-				print("\n\n\n\nCOMMUNITY CARDS\n=========================\n",communityCards,"\n=========================\n")
-			print("Call is on ",r.name,"\n")
-			print("PLAYERS CARDS\n=========================\n",r.hand,"\n=========================\n")
-			if r.bet == highestBet:
-				try:
-					playerFinalChoice = int(input(r.name," choose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n"))
-					if 1 > playerFinalChoice or playerFinalChoice > 3:
-						raise ValueError
-				except Exception:
-					print("Choice should be a number: '1', '2' or '3'.\n\n")
-					playerFinalChoice = int(input("Choose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n"))
-				if playerFinalChoice == 1:
-					print("1 final choice")
-				if playerFinalChoice == 2:
-					playerRaise = int(input("How much do you want to raise?\n\n"))
-					if playerRaise < highestBet*1.5:
-						print("Amount must be at least ",highestBet*1.5,"\n\n")
+		# for s in circle_iter(activePlayers,PlayerID):
+		# 	if s.folded == 1:
+		# 		haveFolded += 1
+		print(checkFolded())
+		time.sleep(2)
+		if checkFolded() == len(activePlayers)-1:
+			haveFolded = checkFolded()
+			return haveFolded
+		else:
+			if r.folded == 0:
+				os.system("cls")
+				for s in activePlayers:
+					if r == activePlayers[s]:
+						continue
+					if activePlayers[s].folded == 1:
+						print("----------\n",activePlayers[s].name,":\nBALANCE = ",activePlayers[s].money,",\nFOLDED OUT OF ROUND")
+					if activePlayers[s].folded == 0:
+						print("----------\n",activePlayers[s].name,":\nBALANCE = ",activePlayers[s].money,",\nBET IN CURRENT ROUND: ",activePlayers[s].bet)
+				if len(communityCards) == 6:
+					tempComcards = []
+					for c in communityCards:
+						tempComcards.append(c)
+					tempComcards.pop()
+					print("\n\n\n\nCOMMUNITY CARDS\n=========================\n",tempComcards,"\n=========================\n")
+				else:
+					print("\n\n\n\nCOMMUNITY CARDS\n=========================\n",communityCards,"\n=========================\n")
+				print("Call is on ",r.name,"\n")
+				print("PLAYERS CARDS\n=========================\n",r.hand,"\n=========================\n")
+				if r.bet == highestBet:
+					try:
+						playerFinalChoice = int(input(r.name,", your current Balance is ",r.money,"\nChoose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n"))
+						if 1 > playerFinalChoice or playerFinalChoice > 3:
+							raise ValueError
+					except Exception:
+						print("Choice should be a number: '1', '2' or '3'.\n\n")
+						playerFinalChoice = int(input("Choose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n"))
+					if playerFinalChoice == 1:
+						print("1 final choice")
+					if playerFinalChoice == 2:
 						playerRaise = int(input("How much do you want to raise?\n\n"))
-					newBet = playerRaise - r.bet
-					r.betMoney(newBet)
-					highestBet = playerRaise
-					print("2 final choice")
-				if playerFinalChoice == 3:
-					r.folded = 1
-					print("3 final choice")
-				time.sleep(1)
-			if r.bet < highestBet:
-				print(r.name," do you want to call for ",highestBet - r.bet,", raise or fold?\n\nChoose and option.\n")
-				try:
-					playerFinalChoice = int(input("[1] Call\n[2] Raise\n[3] Fold\n\n"))
-					if 1 > playerFinalChoice or playerFinalChoice > 3:
-						raise ValueError
-				except Exception:
-					print("Choice should be a number: '1', '2' or '3'.\n\n")
-					playerFinalChoice = int(input("[1] Call\n[2] Raise\n[3] Fold\n\n"))
-				if playerFinalChoice == 1:
-					newBet = highestBet - r.bet
-					r.betMoney(newBet)			
-					print("1 final choice")
-				if playerFinalChoice == 2:
-					playerRaise = int(input("How much do you want to raise?\n\n"))
-					if playerRaise < highestBet*1.5:
-						print("Amount must be at least ",highestBet*1.5,"\n\n")
+						if playerRaise < highestBet*1.5:
+							print("Amount must be at least ",highestBet*1.5,"\n\n")
+							playerRaise = int(input("How much do you want to raise?\n\n"))
+						newBet = playerRaise - r.bet
+						r.betMoney(newBet)
+						highestBet = playerRaise
+						print("2 final choice")
+					if playerFinalChoice == 3:
+						r.folded = 1
+						print("3 final choice")
+					time.sleep(1)
+				if r.bet < highestBet:
+					print(r.name," do you want to call for ",highestBet - r.bet,", raise or fold?\n","Your current Balance is ",r.money,"\n\nChoose an option.\n")
+					try:
+						playerFinalChoice = int(input("[1] Call\n[2] Raise\n[3] Fold\n\n"))
+						if 1 > playerFinalChoice or playerFinalChoice > 3:
+							raise ValueError
+					except Exception:
+						print("Choice should be a number: '1', '2' or '3'.\n\n")
+						playerFinalChoice = int(input("[1] Call\n[2] Raise\n[3] Fold\n\n"))
+					if playerFinalChoice == 1:
+						newBet = highestBet - r.bet
+						r.betMoney(newBet)			
+						print("1 final choice")
+					if playerFinalChoice == 2:
 						playerRaise = int(input("How much do you want to raise?\n\n"))
-					newBet = playerRaise - r.bet
-					r.betMoney(newBet)
-					highestBet = playerRaise
-					print("2 final choice")
-				if playerFinalChoice == 3:
-					r.folded = 1
-					print("3 final choice")
-				time.sleep(1)
+						if playerRaise < highestBet*1.5:
+							print("Amount must be at least ",highestBet*1.5,"\n\n")
+							playerRaise = int(input("How much do you want to raise?\n\n"))
+						newBet = playerRaise - r.bet
+						r.betMoney(newBet)
+						highestBet = playerRaise
+						print("2 final choice")
+					if playerFinalChoice == 3:
+						r.folded = 1
+						print("3 final choice")
+					time.sleep(1)
 
 Players = ("Jon","David","Simon", "George")
 
@@ -574,29 +610,31 @@ while(True):
 		for d in activePlayers:
 			print(activePlayers[d].finalCards)
 		communityCards.append(cardDeck.pop()) # deal extra card to trigger round reset in the checkWin funtion
-		highestBet, PlayerID, haveFolded, totCount = checkBets()
+		highestBet, PlayerID, totCount = checkBets()
 		totCount = 0
 		while totCount < len(activePlayers):
 			betRound(highestBet,PlayerID)
-			highestBet, PlayerID, haveFolded, totCount = checkBets()
+			if checkFolded() == len(activePlayers) - 1:
+				break
+			highestBet, PlayerID, totCount = checkBets()
 		updateBalances()
-		checkWin(haveFolded)
+		checkWin()
 		time.sleep(1)
 	if len(communityCards) == 4:
 		os.system("cls")
 		print("\n\nDEALING THE TURN\n\n")
 		time.sleep(2)
 		os.system("cls")
-		highestBet, PlayerID, haveFolded, totCount = checkBets()
+		highestBet, PlayerID, totCount = checkBets()
 		totCount = 0
 		while totCount < len(activePlayers):
 			betRound(highestBet,PlayerID)
-			highestBet, PlayerID, haveFolded, totCount = checkBets()
-		updateBalances()
-		checkWin(haveFolded)
+			highestBet, PlayerID, totCount = checkBets()
 		cardDeck.pop() # brun card before river
 		communityCards.append(cardDeck.pop()) # deal river card
 		print("this is the length of the community cars",len(communityCards))
+		updateBalances()
+		checkWin()
 		time.sleep(1)
 		# betRound()
 		# continue
@@ -606,16 +644,18 @@ while(True):
 		print("\n\nDEALING THE FLOP\n\n")
 		time.sleep(2)
 		os.system("cls")
-		highestBet, PlayerID, haveFolded, totCount = checkBets()
+		highestBet, PlayerID, totCount = checkBets()
 		totCount = 0
 		while totCount < len(activePlayers):
 			betRound(highestBet,PlayerID)
-			highestBet, PlayerID, haveFolded, totCount = checkBets()
+			if checkFolded() == len(activePlayers) - 1:
+				break
+			highestBet, PlayerID, totCount = checkBets()
 			#print("highest bet = ",highestBet,"......... player ID = ", PlayerID, ".............have folded = ", haveFolded, "\n........total count = ", totCount,".......active players = ", len(activePlayers))
-		updateBalances()
-		checkWin(haveFolded)
 		cardDeck.pop() # burn card before turn
 		communityCards.append(cardDeck.pop()) # deal turn card
+		updateBalances()
+		checkWin()
 		time.sleep(1)
 		# betRound()
 		# continue
@@ -647,9 +687,13 @@ while(True):
 		# print(cardValues)
 		# time.sleep(1)
 		# betRound()
-		highestBet, PlayerID, haveFolded, totCount = checkBets()
+		highestBet, PlayerID, totCount = checkBets()
 		while totCount < len(activePlayers):
 			betRound(highestBet,PlayerID)
+			print("have folder have folded have folded     ", checkFolded())
+			time.sleep(2)
+			if checkFolded() == len(activePlayers) - 1:
+				break
 			# print("===================AFTER ROUND BEFORE SECOND CHECK==========================")
 			# print(highestBet," is highestBet") 
 			# print(PlayerID," is playersid")
@@ -658,7 +702,7 @@ while(True):
 			# print(len(activePlayers)," is len of activePlayers")
 			# for d in circle_iter(activePlayers,int(p)):
 			# 	print(d.hand,d.name,d.bet," = BET......",d.money," = BALANCE......",d.score," = score")
-			highestBet, PlayerID, haveFolded, totCount = checkBets()
+			highestBet, PlayerID, totCount = checkBets()
 			# print(highestBet," is highestBet") 
 			# print(PlayerID," is playersid")
 			# print(haveFolded," haveFolded")
@@ -666,11 +710,11 @@ while(True):
 			# print(len(activePlayers)," is len of activePlayers")
 			# for d in circle_iter(activePlayers,int(p)):
 			# 	print(d.hand,d.name,d.bet," = BET......",d.money," = BALANCE......",d.score," = score")
-		updateBalances()
-		checkWin(haveFolded)
 		cardDeck.pop() # burn one card before the flop
 		for i in range(3): # deal the flop
 			communityCards.append(cardDeck.pop())
+		updateBalances()
+		checkWin()
 
 
 ########## need to fix .. kept two players in the game, checking all the way and the round was not reset.  The community cards added up to more that 5.
