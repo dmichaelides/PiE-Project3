@@ -105,11 +105,25 @@ class Player:
 		cardList = []
 		for v in origCardList:
 			cardList.append(cardValues[v][0]+cardValues[v][1])
+		checMatch = self.checkMatches()
 		if self.checkStrFlush(self.checkFlush()) == True:
 			return "staightFlush"
+		if self.checkMatches() == "FOAK":
+			return "Four of a Kind"
+		if self.checkMatches() == "FH":
+			return "Full house"
 		if self.checkFlush() == True:
 			return "Flush"
-
+		if self.checkMatches() == "STR":
+			return "Straight"
+		if self.checkMatches() == "Three":
+			return "Three of a Kind"
+		if self.checkMatches() == "TwoP":
+			return "Two pairs"
+		if self.checkMatches() == "OneP":
+			return "One Pair"
+		if self.checkMatches() == "HK":
+			return "High Card"
 		print(cardList)
 		return self.score
 
@@ -211,7 +225,7 @@ class Player:
 		#print(valueList,"   value list")
 	    
 	def checkMatches(self):
-	    b = getValueList()
+	    b = self.getValueList()
 	    list.sort(b)
 	    zeroCount = 0
 	    zeroInRow = 0
@@ -278,67 +292,66 @@ class Player:
 	    #print(zeroCount," zerocount ",zeroInRow," inrow ")
 
 	def checkStr(self):
-	    values = []
-	    tempValues = []
-	    for i in getValueList():
-	        values.append(i)
-	        tempValues.append(i)
-	    list.sort(values)
-	    list.sort(tempValues)
-	    if tempValues[-1] == 14: # checks is there is an Ace
-	        tempValues.pop()
-	        #print(tempValues)
-	        checkList = [2,3,4,5]
-	        isLowStr = 0
-	        for k in checkList: # checks if the remaining four cards are 2,3,4,5
-	            if k not in tempValues:
-	                #print("stop")
-	                break
-	            else:
-	                isLowStr += 1
-	                #continue
-	                #time.sleep(3)
-	        if isLowStr == 4:
-	            #print("lowest straight")
-	            tempValues = checkList
-	            tempValues.append(1) # adds Ace with the value of 1
-	            list.sort(tempValues)
-	            values = tempValues
-	    #print(np.diff(values))
-	    #print(values)
-	    oneCount = 0
-	    oneInRow = 0
-	    previousOne = 0
-	    #print(np.diff(b))
-	    for i in np.diff(values): # when sorting and running np.diff, the array will be [1,1,1,1] if there is a straight
-	        if i == 1:
-	            oneCount += 1
-	            if previousOne == 1:
-	                oneInRow += 1
-	            previousOne = 1
-	        else:
-	            previousOne = 0
-	    if oneInRow >= 3:
-	        #print("this is a straight")
-	        if len(values) == 5:
-	            pass
-	        if len(values) == 6:
-	            list.sort(values,reverse=True)
-	            values.pop()
-	        if len(values) == 7:
-	            list.sort(values,reverse=True)
-	            values.pop()
-	            values.pop()
-	        return True
-	        #self.score += ###### need to set the straight level score here
-	        
-	        #print("there's a straight ")
-	    else:
-	        return False
+		try:
+			values = []
+			tempValues = []
+			for i in self.getValueList():
+				values.append(i)
+				tempValues.append(i)
+			list.sort(values)
+			list.sort(tempValues)
+			if tempValues[-1] == 14: # checks is there is an Ace
+				tempValues.pop()
+				#print(tempValues)
+				checkList = [2,3,4,5]
+				isLowStr = 0
+				for k in checkList: # checks if the remaining four cards are 2,3,4,5
+					if k not in tempValues:
+						#print("stop")
+						break
+					else:
+						isLowStr += 1
+						#continue
+						#time.sleep(3)
+				if isLowStr == 4:
+					#print("lowest straight")
+					tempValues = checkList
+					tempValues.append(1) # adds Ace with the value of 1
+					list.sort(tempValues)
+					values = tempValues
+			#print(np.diff(values))
+			#print(values)
+			oneCount = 0
+			oneInRow = 0
+			previousOne = 0
+			#print(np.diff(b))
+			for i in np.diff(values): # when sorting and running np.diff, the array will be [1,1,1,1] if there is a straight
+				if i == 1:
+					oneCount += 1
+					if previousOne == 1:
+						oneInRow += 1
+					previousOne = 1
+				else:
+					previousOne = 0
+			if oneInRow >= 3:
+				#print("this is a straight")
+				if len(values) == 5:
+					pass
+				if len(values) == 6:
+					list.sort(values,reverse=True)
+					values.pop()
+				if len(values) == 7:
+					list.sort(values,reverse=True)
+					values.pop()
+					values.pop()
+				return True
+				#self.score += ###### need to set the straight level score here
+				#print("there's a straight ")
+			else:
+				return False		
+		except IndexError:
+			pass
 
-
-
-		
 	def dealCard(self,card):
 		self.hand.append(card)
  	 
@@ -409,6 +422,7 @@ def checkWin():
 		for w in activePlayers:
 			if activePlayers[w].folded == 1:
 				continue
+			activePlayers[w].setScore()
 			if activePlayers[w].score > highestScore - 1000:
 				print("....need to finish score code here .... ") # all players who qualify here split pot. 
 		resetRound()
@@ -508,8 +522,10 @@ def betRound(highestBet=0, PlayerID=-1):
 				print("Call is on ",r.name,"\n")
 				print("PLAYERS CARDS\n=========================\n",r.hand,"\n=========================\n")
 				if r.bet == highestBet:
+					print(r.name,", your current Balance is ",r.money,"\nChoose an option.\n")
 					try:
-						playerFinalChoice = int(input(r.name,", your current Balance is ",r.money,"\nChoose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n"))
+						playerFinalChoice = int(input("[1] Check\n[2] Raise\n[3] Fold\n\n"))
+						print(str(playerFinalChoice),"plays choiceafter ask")
 						if 1 > playerFinalChoice or playerFinalChoice > 3:
 							raise ValueError
 					except Exception:
@@ -560,6 +576,8 @@ def betRound(highestBet=0, PlayerID=-1):
 Players = ("Jon","David","Simon", "George")
 
 print(Players)
+# Player1 = Player(Players[0])
+# Player2 = Player(Players[1])
 
 try:
 	Player1 = Player(Players[0])
