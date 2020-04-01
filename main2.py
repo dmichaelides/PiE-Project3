@@ -59,6 +59,7 @@ def creatDeck():
 
 cardDeck = creatDeck()
 print(cardValues)
+#time.sleep(20)
 
 # print(cardDeck,"\n\n")
 # print(cardValues)
@@ -165,37 +166,38 @@ class Player:
 	                    isLowStr += 1
 	            if isLowStr == 4:
 	                #print("lowest straight flsh")
-	                tempSuitedValues = checkList
-	                tempSuitedValues.append(1) # adds Ace with the value of 1
-	                list.sort(tempSuitedValues)
-	                suitedValues = tempSuitedValues
+	                if 6 in tempSuitedValues:
+	                	suitedValues = [2,3,4,5,6]
+	                else:
+	                	suitedValues = [1,2,3,4,5]
+	            return suitedValues
 	    oneCount = 0
 	    oneInRow = 0
 	    previousOne = 0
 	    #print(suitedValues)
 	    #print(np.diff(b))
+	    peakStraight = 0
+	    valuesIndex = 0
 	    for i in np.diff(suitedValues): # when sorting and running np.diff, the array will be [1,1,1,1] if there is a straight
-	        if i == 1:
-	            oneCount += 1
-	            if previousOne == 1:
-	                oneInRow += 1
-	            previousOne = 1
-	        else:
-	            previousOne = 0
+	    	valuesIndex += 1
+	    	if i == 1:
+	    		oneCount += 1
+	    		if previousOne == 1:
+	    			oneInRow += 1
+	    			if oneInRow >= 3:
+	    				peakStraight = suitedValues[valuesIndex]
+	    		previousOne = 1
+	    	else:
+	    		previousOne = 0
 	    if oneInRow >= 3:
-	        #print("this is a straight flsh")
-	        if len(suitedValues) == 5:
-	            pass
-	        if len(suitedValues) == 6:
-	            list.sort(suitedValues,reverse=True)
-	            suitedValues.pop()
-	        if len(suitedValues) == 7:
-	            list.sort(suitedValues,reverse=True)
-	            suitedValues.pop()
-	            suitedValues.pop()
-	        return suitedValues
+	    	#print("this is a straight")
+	    	newValues = []
+	    	for n in range(5):
+	    		newValues.append(peakStraight)
+	    		peakStraight -= 1
+	    	suitedValues = newValues
+	    	return suitedValues
 	        #self.score += ###### need to set the straight flush level score here
-	        
 	        #print("there's a straight flush")
 	    else:
 	        return False
@@ -230,63 +232,77 @@ class Player:
 	    zeroCount = 0
 	    zeroInRow = 0
 	    previousZero = 0
+	    valueListIndex = 0
+	    FOAK = []
+	    FH = []
+	    Three = []
+	    TwoP = []
+	    OneP = []
 	    #print(np.diff(b))
 	    for i in np.diff(b):
+	        valueListIndex += 1
 	        if i == 0:
 	            zeroCount += 1
+	            TwoP.append(b[valueListIndex])
+	            OneP.append(b[valueListIndex])
 	            if previousZero == 1:
+	                Three.append(b[valueListIndex])
 	                zeroInRow += 1
+	                if zeroCount == 3:
+	                	FH.append(b[valueListIndex])
+	                	if zeroInRow == 2:
+	                		FOAK.append(b[valueListIndex])
 	            previousZero = 1
 	        else:
 	            previousZero = 0
 	    if zeroCount == 3:
 	        if zeroInRow == 2:
-	            #print("four of a kind")
+	            print(FOAK,self.name,"four of a kind")
 	            #self.score += ##### four fo a king score
 	            return "FOAK" # four of a kind
 	        if zeroInRow == 1:
-	            #print("full house")
+	            print(FH,self.name,"full house")
 	            #self.score += ##### full house score
 	            return "FH" # full house
 	        if zeroInRow == 0:
-	            if checkStr() == True:
-	                #print("there's a straight")
+	            if self.checkStr() == True:
+	                print(self.name,"there's a straight")
 	                return "STR" #straight
 	            else:
-	                #print("Two pair")
+	                print(TwoP,self.name,"two pair")
 	                #self.score += ##### two pair score
 	                return "TwoP" # two pair
 	    if zeroCount == 2:
 	        if zeroInRow == 1:
 	            if self.checkStr() == True:
-	                #print("there's a straight")
+	                print(self.name,"there's a straight")
 	                return "STR" #straight
 	            else:
-	                #print("Three of a kind")
+	                print(Three,self.name,"three of a kind")
 	                #self.score += ##### three of a kind score
 	                return "Three" # three of a kind
 	        if zeroInRow == 0:
 	            if self.checkStr() == True:
-	                #print("there's a straight")
+	                print(self.name,"there's a straight")
 	                return "STR" #straight
 	            else:
-	                #print("Two pair")
+	                print(TwoP,self.name,"two pair")
 	                #self.score += ##### two pair score
 	                return "TwoP" # two pair
 	    if zeroCount == 1:
 	        if self.checkStr() == True:
-	            #print("there's a straight")
+	            print(self.name,"there's a straight")
 	            return "STR" #straight
 	        else:
-	            #print("One pair")
+	            print(OneP,self.name,"one pair")
 	            #self.score += ##### One pair score
 	            return "OneP" # One pair
 	    if zeroCount == 0:
 	        if self.checkStr() == True:
-	            #print("there's a straight")
+	            print(self.name,"there's a straight")
 	            return "STR" #straight
 	        else:
-	            #print("High Card")
+	            print(self.name,"high card")
 	            #self.score += ##### high card score
 	            return "High" # high
 	    #print(zeroCount," zerocount ",zeroInRow," inrow ")
@@ -315,35 +331,37 @@ class Player:
 						#time.sleep(3)
 				if isLowStr == 4:
 					#print("lowest straight")
-					tempValues = checkList
-					tempValues.append(1) # adds Ace with the value of 1
-					list.sort(tempValues)
-					values = tempValues
+					if 6 in tempValues:
+						values = [2,3,4,5,6]
+					else:
+						values = [1,2,3,4,5]
+				return True
 			#print(np.diff(values))
 			#print(values)
 			oneCount = 0
 			oneInRow = 0
 			previousOne = 0
+			peakStraight = 0
+			valuesIndex = 0
 			#print(np.diff(b))
 			for i in np.diff(values): # when sorting and running np.diff, the array will be [1,1,1,1] if there is a straight
+				valuesIndex += 1
 				if i == 1:
 					oneCount += 1
 					if previousOne == 1:
 						oneInRow += 1
+						if oneInRow >= 3:
+							peakStraight = values[valuesIndex]
 					previousOne = 1
 				else:
 					previousOne = 0
 			if oneInRow >= 3:
 				#print("this is a straight")
-				if len(values) == 5:
-					pass
-				if len(values) == 6:
-					list.sort(values,reverse=True)
-					values.pop()
-				if len(values) == 7:
-					list.sort(values,reverse=True)
-					values.pop()
-					values.pop()
+				newValues = []
+				for n in range(5):
+					newValues.append(peakStraight)
+					peakStraight -= 1
+				values = newValues
 				return True
 				#self.score += ###### need to set the straight level score here
 				#print("there's a straight ")
@@ -423,6 +441,7 @@ def checkWin():
 			if activePlayers[w].folded == 1:
 				continue
 			activePlayers[w].setScore()
+			time.sleep(3)
 			if activePlayers[w].score > highestScore - 1000:
 				print("....need to finish score code here .... ") # all players who qualify here split pot. 
 		resetRound()
@@ -496,8 +515,8 @@ def betRound(highestBet=0, PlayerID=-1):
 		# for s in circle_iter(activePlayers,PlayerID):
 		# 	if s.folded == 1:
 		# 		haveFolded += 1
-		print(checkFolded())
-		time.sleep(2)
+		# print(checkFolded())
+		# time.sleep(2)
 		if checkFolded() == len(activePlayers)-1:
 			haveFolded = checkFolded()
 			return haveFolded
@@ -525,52 +544,74 @@ def betRound(highestBet=0, PlayerID=-1):
 					print(r.name,", your current Balance is ",r.money,"\nChoose an option.\n")
 					try:
 						playerFinalChoice = int(input("[1] Check\n[2] Raise\n[3] Fold\n\n"))
-						print(str(playerFinalChoice),"plays choiceafter ask")
 						if 1 > playerFinalChoice or playerFinalChoice > 3:
 							raise ValueError
 					except Exception:
 						print("Choice should be a number: '1', '2' or '3'.\n\n")
 						playerFinalChoice = int(input("Choose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n"))
 					if playerFinalChoice == 1:
-						print("1 final choice")
+						print(r.name,"Checks")
 					if playerFinalChoice == 2:
 						playerRaise = int(input("How much do you want to raise?\n\n"))
 						if playerRaise < highestBet*1.5:
 							print("Amount must be at least ",highestBet*1.5,"\n\n")
 							playerRaise = int(input("How much do you want to raise?\n\n"))
+						if playerRaise > r.money:
+							print("Easy tiger, you don't have that much money.\n\n Your available balance is ",r.money,"\n\n")
+							playerRaise = int(input("How much do you want to raise?\n\n"))
 						newBet = playerRaise - r.bet
 						r.betMoney(newBet)
 						highestBet = playerRaise
-						print("2 final choice")
+						print(r.name," has raised the bet to ",newBet)
 					if playerFinalChoice == 3:
 						r.folded = 1
-						print("3 final choice")
+						print(r.name," has folded.")
 					time.sleep(1)
 				if r.bet < highestBet:
-					print(r.name," do you want to call for ",highestBet - r.bet,", raise or fold?\n","Your current Balance is ",r.money,"\n\nChoose an option.\n")
-					try:
-						playerFinalChoice = int(input("[1] Call\n[2] Raise\n[3] Fold\n\n"))
-						if 1 > playerFinalChoice or playerFinalChoice > 3:
-							raise ValueError
-					except Exception:
-						print("Choice should be a number: '1', '2' or '3'.\n\n")
-						playerFinalChoice = int(input("[1] Call\n[2] Raise\n[3] Fold\n\n"))
-					if playerFinalChoice == 1:
-						newBet = highestBet - r.bet
-						r.betMoney(newBet)			
-						print("1 final choice")
-					if playerFinalChoice == 2:
-						playerRaise = int(input("How much do you want to raise?\n\n"))
-						if playerRaise < highestBet*1.5:
-							print("Amount must be at least ",highestBet*1.5,"\n\n")
+					if highestBet - r.bet >= r.money:
+						print(r.name," your avaiable Balance is ",r.money,"\n\nChoose an option.\n")
+						try:
+							playerFinalChoice = int(input("[1] All-in\n[2] Fold\n"))
+							if 1 > playerFinalChoice or playerFinalChoice > 2:
+								raise ValueError
+						except Exception:
+							print("Choice should be a number: '1' or '2'.\n\n")
+							playerFinalChoice = int(input("[1] All-in\n[2] Fold\n\n"))
+						if playerFinalChoice == 1:
+							newBet = r.money
+							r.betMoney(newBet)			
+							print(r.name," is All-in!")
+						if playerFinalChoice == 2:
+							r.folded = 1
+							print(r.name," has folded.")
+					if highestBet - r.bet < r.money:
+						print(r.name," do you want to call for ",highestBet - r.bet,", raise or fold?\n","Your current Balance is ",r.money,"\n\nChoose an option.\n")
+						try:
+							playerFinalChoice = int(input("[1] Call\n[2] Raise\n[3] Fold\n\n"))
+							if 1 > playerFinalChoice or playerFinalChoice > 3:
+								raise ValueError
+						except Exception:
+							print("Choice should be a number: '1', '2' or '3'.\n\n")
+							playerFinalChoice = int(input("[1] Call\n[2] Raise\n[3] Fold\n\n"))
+						if playerFinalChoice == 1:
+							newBet = highestBet - r.bet
+							r.betMoney(newBet)			
+							print(r.name," Calls bet ", newBet)
+						if playerFinalChoice == 2:
 							playerRaise = int(input("How much do you want to raise?\n\n"))
-						newBet = playerRaise - r.bet
-						r.betMoney(newBet)
-						highestBet = playerRaise
-						print("2 final choice")
-					if playerFinalChoice == 3:
-						r.folded = 1
-						print("3 final choice")
+							if playerRaise < highestBet*1.5:
+								print("Amount must be at least ",highestBet*1.5,"\n\n")
+								playerRaise = int(input("How much do you want to raise?\n\n"))
+							if playerRaise > r.money:
+								print("Easy tiger, you don't have that much money.\n\n Your available balance is ",r.money,"\n\n")
+								playerRaise = int(input("How much do you want to raise?\n\n"))
+							newBet = playerRaise - r.bet
+							r.betMoney(newBet)
+							highestBet = playerRaise
+							print(r.name," has raised the bet to ",newBet)
+						if playerFinalChoice == 3:
+							r.folded = 1
+							print(r.name," has folded.")
 					time.sleep(1)
 
 Players = ("Jon","David","Simon", "George")
@@ -620,7 +661,7 @@ while(True):
 	if len(communityCards) == 5:
 		os.system("cls")
 		print("\n\nDEALING THE RIVER\n\n")
-		time.sleep(2)
+		time.sleep(1)
 		os.system("cls")
 		for d in activePlayers:
 			activePlayers[d].colFinalCards()
@@ -641,7 +682,7 @@ while(True):
 	if len(communityCards) == 4:
 		os.system("cls")
 		print("\n\nDEALING THE TURN\n\n")
-		time.sleep(2)
+		time.sleep(1)
 		os.system("cls")
 		highestBet, PlayerID, totCount = checkBets()
 		totCount = 0
@@ -660,7 +701,7 @@ while(True):
 		# 	break
 		os.system("cls")
 		print("\n\nDEALING THE FLOP\n\n")
-		time.sleep(2)
+		time.sleep(1)
 		os.system("cls")
 		highestBet, PlayerID, totCount = checkBets()
 		totCount = 0
@@ -680,7 +721,7 @@ while(True):
 	if len(communityCards) < 3:
 		os.system("cls")
 		print("\n\nDEALING PLAYERS CARDS\n\n")
-		time.sleep(2)
+		time.sleep(1)
 		os.system("cls")
 		for p in activePlayers:
 			if activePlayers[p].isDealer == 1:
@@ -708,7 +749,7 @@ while(True):
 		highestBet, PlayerID, totCount = checkBets()
 		while totCount < len(activePlayers):
 			betRound(highestBet,PlayerID)
-			print("have folder have folded have folded     ", checkFolded())
+			# print("have folder have folded have folded     ", checkFolded())
 			time.sleep(2)
 			if checkFolded() == len(activePlayers) - 1:
 				break
