@@ -104,27 +104,45 @@ class Player:
 		for c in self.finalCards:
 			origCardList.append(c)
 		cardList = []
+		Rank = ""
 		for v in origCardList:
 			cardList.append(cardValues[v][0]+cardValues[v][1])
-		checMatch = self.checkMatches()
-		if self.checkStrFlush(self.checkFlush()) == True:
-			return "staightFlush"
-		if self.checkMatches() == "FOAK":
-			return "Four of a Kind"
-		if self.checkMatches() == "FH":
-			return "Full house"
-		if self.checkFlush() == True:
-			return "Flush"
-		if self.checkMatches() == "STR":
-			return "Straight"
-		if self.checkMatches() == "Three":
-			return "Three of a Kind"
-		if self.checkMatches() == "TwoP":
-			return "Two pairs"
-		if self.checkMatches() == "OneP":
-			return "One Pair"
 		if self.checkMatches() == "HK":
-			return "High Card"
+			Rank = "High Card"
+		if self.checkMatches() == "OneP":
+			Rank = "One Pair"
+		if self.checkMatches() == "TwoP":
+			Rank = "Two pairs"
+		if self.checkMatches() == "Three":
+			Rank = "Three of a Kind"
+		if self.checkMatches() == "STR":
+			Rank = "Straight"
+		if self.checkFlush() == True:
+			Rank = "Flush"
+		if self.checkMatches() == "FH":
+			Rank = "Full house"
+		if self.checkMatches() == "FOAK":
+			Rank = "Four of a Kind"
+		if self.checkStrFlush(self.checkFlush()) == True:
+			Rank = "staightFlush"
+		if Rank == "High Card":
+			self.score += 0
+		if Rank == "One Pair":
+			self.score += 0
+		if Rank == "Two pairs":
+			self.score += 0
+		if Rank == "Three of a Kind":
+			self.score += 0
+		if Rank == "Straight":
+			self.score += 0
+		if Rank == "Flush":
+			self.score += 0
+		if Rank == "Full house":
+			self.score += 0
+		if Rank == "Four of a Kind":
+			self.score += 0
+		if Rank == "staightFlush":
+			self.score += 0
 		print(cardList)
 		return self.score
 
@@ -170,7 +188,6 @@ class Player:
 	                	suitedValues = [2,3,4,5,6]
 	                else:
 	                	suitedValues = [1,2,3,4,5]
-	            return suitedValues
 	    oneCount = 0
 	    oneInRow = 0
 	    previousOne = 0
@@ -196,7 +213,7 @@ class Player:
 	    		newValues.append(peakStraight)
 	    		peakStraight -= 1
 	    	suitedValues = newValues
-	    	return suitedValues
+	    	return True
 	        #self.score += ###### need to set the straight flush level score here
 	        #print("there's a straight flush")
 	    else:
@@ -335,7 +352,6 @@ class Player:
 						values = [2,3,4,5,6]
 					else:
 						values = [1,2,3,4,5]
-				return True
 			#print(np.diff(values))
 			#print(values)
 			oneCount = 0
