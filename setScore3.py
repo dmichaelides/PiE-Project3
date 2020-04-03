@@ -2,18 +2,20 @@
 
 
 import numpy as np
+import collections,numpy
 #finalCards = ['3d', '8d', '5d', '2d', '4d', 'Ad', '9d'] # straight flush
 #finalCards = ['3d', '3c', '3s', '3h', '4d', 'Kc', 'Ah'] # four kind
 #finalCards = ['3d', '3c', '3s', '8c', '4d', 'Ac', 'Ah'] # full house
-finalCards = ['3d', '3c', 'As', '8c', '4d', 'Ac', 'Ah'] # full house
+#finalCards = ['3d', '3c', 'As', '8c', '4d', 'Ac', 'Ah'] # full house
 #finalCards = ['3d', '3c', '3s', '8c', '4d', 'Kc', 'Ah'] # three kind
 #finalCards = ['2d', '3c', '3s', '3h', '4d', 'Kc', 'Ah'] # three kind
 #finalCards = ['3d', '3c', '8s', '8c', '4d', '4c', 'Ah'] # two pair x3
 #finalCards = ['3d', '3c', '8s', '8c', '4d', 'Kc', 'Ah'] # two pair
 #finalCards = ['3d', '3c', '2s', '8c', '4d', 'Kc', 'Ah'] # one pair
 #finalCards = ['3d', '2c', '5s', '8c', '4d', 'Kc', '6h'] # straight
+#finalCards = ['7d', '2c', '5s', '8c', '4d', 'Kc', '6h'] # midd straight
 #finalCards = ['3d', '2c', '5s', '8c', '4d', 'Kc', '9h'] # high card
-#finalCards = ['3d', '6d', '7d', '8d', '4d', 'Kc', 'Ah'] # flush
+finalCards = ['3h', '6h', '7h', '8h', '4h', 'Kc', 'Ah'] # flush
 #finalCards = ['3d', '2c', '9s', '5c', '4d', 'Kc', 'Ah'] # low straight
 #finalCards = ['Ad', 'Ac', '7s', '7c', '3d', 'Kc', '2h'] # two pair
 cardValues = {'2h': ('2', 'h', 2), '3h': ('3', 'h', 3), '4h': ('4', 'h', 4), '5h': ('5', 'h', 5), '6h': ('6', 'h', 6), '7h': ('7', 'h', 7), '8h': ('8', 'h', 8), '9h': ('9', 'h', 9), '10h': ('10', 'h', 10), 'Jh': ('w', 'h', 11), 'Qh': ('x', 'h', 12), 'Kh': ('y', 'h', 13), 'Ah': ('z', 'h', 14), '2d': ('2', 'd', 2), '3d': ('3', 'd', 3), '4d': ('4', 'd', 4), '5d': ('5', 'd', 5), '6d': ('6', 'd', 6), '7d': ('7', 'd', 7), '8d': ('8', 'd', 8), '9d': ('9', 'd', 9), '10d': ('10', 'd', 10), 'Jd': ('w', 'd', 11), 'Qd': ('x', 'd', 12), 'Kd': ('y', 'd', 13), 'Ad': ('z', 'd', 14), '2s': ('2', 's', 2), '3s': ('3', 's', 3), '4s': ('4', 's', 4), '5s': ('5', 's', 5), '6s': ('6', 's', 6), '7s': ('7', 's', 7), '8s': ('8', 's', 8), '9s': ('9', 's', 9), '10s': ('10', 's', 10), 'Js': ('w', 's', 11), 'Qs': ('x', 's', 12), 'Ks': ('y', 's', 13), 'As': ('z', 's', 14), '2c': ('2', 'c', 2), '3c': ('3', 'c', 3), '4c': ('4', 'c', 4), '5c': ('5', 'c', 5), '6c': ('6', 'c', 6), '7c': ('7', 'c', 7), '8c': ('8', 'c', 8), '9c': ('9', 'c', 9), '10c': ('10', 'c', 10), 'Jc': ('w', 'c', 11), 'Qc': ('x', 'c', 12), 'Kc': ('y', 'c', 13), 'Ac': ('z', 'c', 14)}
@@ -27,26 +29,47 @@ def setScore():
         origCardList.append(c)
     cardList = []
     Rank = ""
+    fValues = []
     for v in origCardList:
         cardList.append(cardValues[v][0]+cardValues[v][1])
-    if checkMatches() == "HK":
+    if checkMatches()[1] == "High":
         Rank = "High Card"
-    if checkMatches() == "OneP":
+        fValues = checkMatches()[0]
+    if checkMatches()[1] == "OneP":
         Rank = "One Pair"
-    if checkMatches() == "TwoP":
+        fValues = checkMatches()[0]
+    if checkMatches()[1] == "TwoP":
         Rank = "Two pairs"
-    if checkMatches() == "Three":
+        fValues = checkMatches()[0]
+    if checkMatches()[1] == "Three":
         Rank = "Three of a Kind"
-    if checkMatches() == "STR":
+        fValues = checkMatches()[0]
+    if checkMatches()[1] == "STR":
         Rank = "Straight"
-    if checkFlush() == True:
+        fValues = checkMatches()[0]
+    if checkFlush() != False:
         Rank = "Flush"
-    if checkMatches() == "FH":
+        suitedValues = []
+        tempfValues = []
+        s = checkFlush()
+        for v in origCardList:
+            if cardValues[v][1] == s:
+                suitedValues.append(cardValues[v][2])
+        suitedValues.sort(reverse=True)
+        for i in range(5):
+            tempfValues.append(suitedValues[i])
+        fValues = tempfValues
+    if checkMatches()[1] == "FH":
         Rank = "Full house"
-    if checkMatches() == "FOAK":
+        fValues = checkMatches()[0]
+    if checkMatches()[1] == "FOAK":
         Rank = "Four of a Kind"
-    if checkStrFlush(checkFlush()) == True:
+        fValues = checkMatches()[0]
+    if checkStrFlush(checkFlush()) != False:
         Rank = "staightFlush"
+        fValues = checkStrFlush(checkFlush())
+    print(Rank)
+    print(fValues)
     if Rank == "High Card":
         score += 0
     if Rank == "One Pair":
@@ -135,7 +158,7 @@ def checkStrFlush(j):
             newValues.append(peakStraight)
             peakStraight -= 1
         suitedValues = newValues
-        return True
+        return suitedValues
         #score += ###### need to set the straight flush level score here
         #print("there's a straight flush")
     else:
@@ -197,54 +220,146 @@ def checkMatches():
             previousZero = 0
     if zeroCount == 3:
         if zeroInRow == 2:
-            print(FOAK,"four of a kind")
+            #print(FOAK,"four of a kind")
+            fNum = FOAK[0] # this is the four of a kind value
+            rVal = [] # compose list of remaing values to eliminate smallest
+            values = []
+            for n in b:
+                if n != fNum:
+                    rVal.append(n)
+            rVal.sort(reverse=True)
+            rVal.pop()
+            rVal.pop()
+            for v in range(4):
+                values.append(fNum)
+            for f in rVal:
+                values.append(f)
+            print(values,"four of a kind")
             #score += ##### four fo a king score
-            return "FOAK" # four of a kind
+            return values,"FOAK" # four of a kind
         if zeroInRow == 1:
             print(FH,"full house")
+            a = FH[3]
+            b = FH[0]
+            values = []
+            if collections.Counter(FH)[a] == 3:
+                FH.append(b)
+            if collections.Counter(FH)[b] == 3:
+                FH.append(a)
+            print(FH,"full full house")
             #score += ##### full house score
-            return "FH" # full house
+            return FH,"FH" # full house
         if zeroInRow == 0:
-            if checkStr() == True:
-                print("there's a straight")
-                return "STR" #straight
+            if checkStr() != False:
+                values = checkStr()
+                print(values,"there's a straight")
+                return values,"STR" #straight
             else:
                 print(TwoP,"two pair")
+                fList = TwoP
+                fList.sort(reverse=True)
+                if len(fList) == 3:
+                    fList.pop()
+                rVal = []
+                values = []
+                for n in b:
+                    if n not in fList:
+                        rVal.append(n)
+                rVal.sort(reverse=True)
+                rVal.pop()
+                rVal.pop()
+                for v in range(2):
+                    values.append(fList[0])
+                    values.append(fList[1])
+                for f in rVal:
+                    values.append(f)
+                print(values)
                 #score += ##### two pair score
-                return "TwoP" # two pair
+                return values,"TwoP" # two pair
     if zeroCount == 2:
         if zeroInRow == 1:
-            if checkStr() == True:
-                print("there's a straight")
-                return "STR" #straight
+            if checkStr() != False:
+                values = checkStr()
+                print(values,"there's a straight")
+                return values,"STR" #straight
             else:
-                print(Three,"three of a kind")
+                #print(Three,"three of a kind")
+                fNum = Three[0] # this is the four of a kind value
+                rVal = [] # compose list of remaing values to eliminate smallest
+                values = []
+                for n in b:
+                    if n != fNum:
+                        rVal.append(n)
+                rVal.sort(reverse=True)
+                #print(rVal)
+                rVal.pop()
+                rVal.pop()
+                for v in range(3):
+                    values.append(fNum)
+                for f in rVal:
+                    values.append(f)
+                print(values,"three of a kind")
                 #score += ##### three of a kind score
-                return "Three" # three of a kind
+                return values,"Three" # three of a kind
         if zeroInRow == 0:
-            if checkStr() == True:
-                print("there's a straight")
-                return "STR" #straight
+            if checkStr() != False:
+                values = checkStr()
+                print(values,"there's a straight")
+                return values,"STR" #straight
             else:
-                print(TwoP,"two pair")
+                fList = TwoP
+                fList.sort(reverse=True)
+                if len(fList) == 3:
+                    fList.pop()
+                rVal = []
+                values = []
+                for n in b:
+                    if n not in fList:
+                        rVal.append(n)
+                rVal.sort(reverse=True)
+                rVal.pop()
+                rVal.pop()
+                for v in range(2):
+                    values.append(fList[0])
+                    values.append(fList[1])
+                for f in rVal:
+                    values.append(f)
+                print(values)
                 #score += ##### two pair score
-                return "TwoP" # two pair
+                return values,"TwoP" # two pair
     if zeroCount == 1:
-        if checkStr() == True:
-            print("there's a straight")
-            return "STR" #straight
+        if checkStr() != False:
+            values = checkStr()
+            print(values,"there's a straight")
+            return values,"STR" #straight
         else:
-            print(OneP,"one pair")
-            #score += ##### One pair score
-            return "OneP" # One pair
+            fNum = OneP[0] # this is the one pair of a kind value
+            rVal = [] # compose list of remaing values to eliminate smallest
+            values = []
+            for n in b:
+                if n != fNum:
+                    rVal.append(n)
+            rVal.sort(reverse=True)
+            rVal.pop()
+            rVal.pop()
+            for v in range(2):
+                values.append(fNum)
+            for f in rVal:
+                values.append(f)
+            print(values,"one pair")
+            return values,"OneP" # one pair
     if zeroCount == 0:
-        if checkStr() == True:
-            print("there's a straight")
-            return "STR" #straight
+        if checkStr() != False:
+            values = checkStr()
+            print(values,"there's a straight")
+            return values,"STR" #straight
         else:
-            print("high card")
-            #score += ##### high card score
-            return "High" # high
+            values = b
+            values.sort(reverse=True)
+            values.pop()
+            values.pop()
+            print(values,"high card")
+            return values,"High" # high
     #print(zeroCount," zerocount ",zeroInRow," inrow ")
 
 def checkStr():
@@ -301,11 +416,13 @@ def checkStr():
                 newValues.append(peakStraight)
                 peakStraight -= 1
             values = newValues
-            return True
+            return values
             #score += ###### need to set the straight level score here
             #print("there's a straight ")
         else:
             return False        
     except IndexError:
         pass
+
 setScore()
+#print(checkFlush())

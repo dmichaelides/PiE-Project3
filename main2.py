@@ -18,6 +18,7 @@ from random import shuffle
 import os
 import time
 import numpy as np
+import collections,numpy
 
 
 cardValues = {} # a dictionary showing each card as Key and a Tuple as value.  Tuple entities are (Card, Suit, Value).  Example: 2 of hearts is "2h":(2,'h',2)
@@ -58,7 +59,7 @@ def creatDeck():
 	return Deck
 
 cardDeck = creatDeck()
-print(cardValues)
+#print(cardValues)
 #time.sleep(20)
 
 # print(cardDeck,"\n\n")
@@ -77,12 +78,12 @@ class Player:
 		self.folded = 0
 		self.bet = 0
 	 	
-	def __str__(self): #print (player)
-		currentHand = ""
-		for card in self.hand:
-			currentHand += str(card) + " "
+	def __str__(self): # print (player)
+		# currentHand = ""
+		# for card in self.hand:
+		# 	currentHand += str(card) + " "
 		# print(currentHand)		
-		finalStatus = currentHand + "score: "# + str(self.score)
+		finalStatus = self.name + " is in the game with ", self.money, " Balance remaining."# + str(self.score)
 		# finalStatus = self.name
 
 		return finalStatus
@@ -98,67 +99,112 @@ class Player:
 
 	def setScore(self):
 		# self.finalCards
-		self.score = 0
+		addScore = 0
 		# self.pokerHand = ""
 		origCardList = []
 		for c in self.finalCards:
 			origCardList.append(c)
 		cardList = []
 		Rank = ""
+		fValues = [0]
 		for v in origCardList:
 			cardList.append(cardValues[v][0]+cardValues[v][1])
-		if self.checkMatches() == "HK":
+		if self.checkMatches()[1] == "High":
 			Rank = "High Card"
-		if self.checkMatches() == "OneP":
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "OneP":
 			Rank = "One Pair"
-		if self.checkMatches() == "TwoP":
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "TwoP":
 			Rank = "Two pairs"
-		if self.checkMatches() == "Three":
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "Three":
 			Rank = "Three of a Kind"
-		if self.checkMatches() == "STR":
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "STR":
 			Rank = "Straight"
-		if self.checkFlush() == True:
+			fValues = self.checkMatches()[0]
+		if self.checkFlush() != False:
 			Rank = "Flush"
-		if self.checkMatches() == "FH":
+			suitedValues = []
+			tempfValues = []
+			s = self.checkFlush()
+			for v in origCardList:
+				if cardValues[v][1] == s:
+					suitedValues.append(cardValues[v][2])
+			suitedValues.sort(reverse=True)
+			for i in range(5):
+				tempfValues.append(suitedValues[i])
+			fValues = tempfValues
+		if self.checkMatches()[1] == "FH":
 			Rank = "Full house"
-		if self.checkMatches() == "FOAK":
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "FOAK":
 			Rank = "Four of a Kind"
-		if self.checkStrFlush(self.checkFlush()) == True:
+			fValues = self.checkMatches()[0]
+		if self.checkStrFlush(self.checkFlush()) != False:
 			Rank = "staightFlush"
-		if Rank == "High Card":
-			self.score += 0
-		if Rank == "One Pair":
-			self.score += 0
-		if Rank == "Two pairs":
-			self.score += 0
-		if Rank == "Three of a Kind":
-			self.score += 0
-		if Rank == "Straight":
-			self.score += 0
-		if Rank == "Flush":
-			self.score += 0
-		if Rank == "Full house":
-			self.score += 0
-		if Rank == "Four of a Kind":
-			self.score += 0
-		if Rank == "staightFlush":
-			self.score += 0
-		print(cardList)
-		return self.score
+			fValues = self.checkStrFlush(self.checkFlush())
+		addScore = np.sum(fValues)
+		try:
+			if Rank == "High Card":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 0
+			if Rank == "One Pair":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 1060
+			if Rank == "Two pairs":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 2120
+			if Rank == "Three of a Kind":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 3180
+			if Rank == "Straight":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 4240
+			if Rank == "Flush":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 5300
+			if Rank == "Full house":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 6360
+			if Rank == "Four of a Kind":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 7420
+			if Rank == "staightFlush":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 8480
+		except TypeError:
+			pass
+		print(self.name," has a ", Rank)
+		# print(fValues," these are the final values")
+		time.sleep(3)
+		return addScore
 
 	def checkFlush(self):
 	    tempDict = {'d':0,'h':0,'s':0,'c':0}
+	    flushKey = "x"
 	    for k in self.finalCards:
 	        for j in tempDict:
 	            if cardValues[k][1] == j:
 	                tempDict[j] += 1
 	    #r = checkMatches()
 	    for k in tempDict:
-	        if tempDict[k] >= 5:
-	            return k
-	        else:
-	            return False
-	        
+	    	if tempDict[k] >= 5:
+	    		flushKey = k
+	    if flushKey != "x":
+	    	return flushKey	
+	    else:
+	    	return False	        
 
 	def checkStrFlush(self,j):
 	    #suite = j
@@ -213,7 +259,7 @@ class Player:
 	    		newValues.append(peakStraight)
 	    		peakStraight -= 1
 	    	suitedValues = newValues
-	    	return True
+	    	return suitedValues
 	        #self.score += ###### need to set the straight flush level score here
 	        #print("there's a straight flush")
 	    else:
@@ -274,54 +320,147 @@ class Player:
 	            previousZero = 0
 	    if zeroCount == 3:
 	        if zeroInRow == 2:
-	            print(FOAK,self.name,"four of a kind")
+	            #print(FOAK,self.name,"four of a kind")
+	            fNum = FOAK[0] # this is the four of a kind value
+	            rVal = [] # compose list of remaing values to eliminate smallest
+	            values = []
+	            for n in b:
+	                if n != fNum:
+	                    rVal.append(n)
+	            rVal.sort(reverse=True)
+	            rVal.pop()
+	            rVal.pop()
+	            for v in range(4):
+	                values.append(fNum)
+	            for f in rVal:
+	                values.append(f)
+	            #print(values,"four of a kind")
 	            #self.score += ##### four fo a king score
-	            return "FOAK" # four of a kind
+	            return values,"FOAK" # four of a kind
 	        if zeroInRow == 1:
-	            print(FH,self.name,"full house")
+	            #print(FH,"full house")
+	            a = FH[3]
+	            b = FH[0]
+	            values = []
+	            if collections.Counter(FH)[a] == 3:
+	                FH.append(b)
+	            if collections.Counter(FH)[b] == 3:
+	                FH.append(a)
+	            #print(FH,"full full house")
 	            #self.score += ##### full house score
-	            return "FH" # full house
+	            return FH,"FH" # full house
 	        if zeroInRow == 0:
-	            if self.checkStr() == True:
-	                print(self.name,"there's a straight")
-	                return "STR" #straight
+	            if self.checkStr() != False:
+	            	values = self.checkStr()
+	            	#print(self.name,"there's a straight")
+	            	return values,"STR" #straight
 	            else:
-	                print(TwoP,self.name,"two pair")
+	                #print(TwoP,"two pair")
+	                fList = TwoP
+	                fList.sort(reverse=True)
+	                if len(fList) == 3:
+	                    fList.pop()
+	                rVal = []
+	                values = []
+	                for n in b:
+	                    if n not in fList:
+	                        rVal.append(n)
+	                rVal.sort(reverse=True)
+	                rVal.pop()
+	                rVal.pop()
+	                for v in range(2):
+	                    values.append(fList[0])
+	                    values.append(fList[1])
+	                for f in rVal:
+	                    values.append(f)
+	                #print(values)
 	                #self.score += ##### two pair score
-	                return "TwoP" # two pair
+	                return values,"TwoP" # two pair
 	    if zeroCount == 2:
 	        if zeroInRow == 1:
-	            if self.checkStr() == True:
-	                print(self.name,"there's a straight")
-	                return "STR" #straight
+	            if self.checkStr() != False:
+	            	values = checkStr()
+	            	#print(self.name,"there's a straight")
+	            	return values,"STR" #straight
 	            else:
-	                print(Three,self.name,"three of a kind")
+	                #print(Three,self.name,"three of a kind")
+	                fNum = Three[0] # this is the four of a kind value
+	                rVal = [] # compose list of remaing values to eliminate smallest
+	                values = []
+	                for n in b:
+	                	if n != fNum:
+	                		rVal.append(n)
+	                rVal.sort(reverse=True)
+	                rVal.pop()
+	                rVal.pop()
+	                for v in range(3):
+	                	values.append(fNum)
+	                for f in rVal:
+	                	values.append(f)
+	                #print(values,"three of a kind")
 	                #self.score += ##### three of a kind score
-	                return "Three" # three of a kind
+	                return values,"Three" # three of a kind
 	        if zeroInRow == 0:
-	            if self.checkStr() == True:
-	                print(self.name,"there's a straight")
-	                return "STR" #straight
+	            if self.checkStr() != False:
+	            	values = self.checkStr()
+	            	#print(self.name,"there's a straight")
+	            	return values,"STR" #straight
 	            else:
-	                print(TwoP,self.name,"two pair")
+	                #print(TwoP,"two pair")
+	                fList = TwoP
+	                fList.sort(reverse=True)
+	                if len(fList) == 3:
+	                    fList.pop()
+	                rVal = []
+	                values = []
+	                for n in b:
+	                    if n not in fList:
+	                        rVal.append(n)
+	                rVal.sort(reverse=True)
+	                rVal.pop()
+	                rVal.pop()
+	                for v in range(2):
+	                    values.append(fList[0])
+	                    values.append(fList[1])
+	                for f in rVal:
+	                    values.append(f)
+	                #print(values)
 	                #self.score += ##### two pair score
-	                return "TwoP" # two pair
+	                return values,"TwoP" # two pair
 	    if zeroCount == 1:
-	        if self.checkStr() == True:
-	            print(self.name,"there's a straight")
-	            return "STR" #straight
+	        if self.checkStr() != False:
+	        	values = self.checkStr()
+	        	#print(self.name,"there's a straight")
+	        	return values,"STR" #straight
 	        else:
-	            print(OneP,self.name,"one pair")
-	            #self.score += ##### One pair score
-	            return "OneP" # One pair
+	            fNum = OneP[0] # this is the one pair of a kind value
+	            rVal = [] # compose list of remaing values to eliminate smallest
+	            values = []
+	            for n in b:
+	                if n != fNum:
+	                    rVal.append(n)
+	            rVal.sort(reverse=True)
+	            rVal.pop()
+	            rVal.pop()
+	            for v in range(2):
+	                values.append(fNum)
+	            for f in rVal:
+	                values.append(f)
+	            #print(values,"one pair")
+	            return values,"OneP" # one pair
 	    if zeroCount == 0:
-	        if self.checkStr() == True:
-	            print(self.name,"there's a straight")
-	            return "STR" #straight
+	        if self.checkStr() != False:
+	        	values = self.checkStr()
+	        	#print(self.name,"there's a straight")
+	        	return values,"STR" #straight
 	        else:
-	            print(self.name,"high card")
+	            #print(self.name,"high card")
+	            values = b
+	            values.sort(reverse=True)
+	            values.pop()
+	            values.pop()
 	            #self.score += ##### high card score
-	            return "High" # high
+	            return values,"High" # high
 	    #print(zeroCount," zerocount ",zeroInRow," inrow ")
 
 	def checkStr(self):
@@ -430,11 +569,11 @@ def updateBalances():
 
 def checkWin():
 	global Pot
-	highestScore = 0
+	finalScores = []
 	foldedCount = checkFolded() 
-	for s in activePlayers:
-		if activePlayers[s].score > highestScore:
-			highestScore = activePlayers[s].score
+	# for s in activePlayers:
+	# 	if activePlayers[s].score > highestScore:
+	# 		highestScore = activePlayers[s].score
 	if len(activePlayers)-1 == foldedCount:
 		# resetRound()
 		for w in activePlayers:
@@ -453,13 +592,28 @@ def checkWin():
 				Pot = 0
 		resetRound()
 	if len(communityCards) == 6:
+		for s in activePlayers:
+			finalScores.append(activePlayers[s].setScore())
+		finalScores.sort()
 		for w in activePlayers:
+			winPool = 0
 			if activePlayers[w].folded == 1:
 				continue
-			activePlayers[w].setScore()
-			time.sleep(3)
-			if activePlayers[w].score > highestScore - 1000:
-				print("....need to finish score code here .... ") # all players who qualify here split pot. 
+			print(finalScores)
+			#time.sleep(3)
+			if activePlayers[w].setScore() == finalScores[-1]:
+				winPool += 1
+			winAmount = int(Pot/winPool)
+			if activePlayers[w].setScore() == finalScores[-1]:
+				activePlayers[w].money += winPool
+				os.system("cls")
+				print(activePlayers[w].name," has won", Pot," in this round!") # all players who qualify here split pot.
+				for i in range(5):
+					print(".")
+					time.sleep(2)
+				print("Starting new round.....") 
+				Pot = 0
+				time.sleep(2)
 		resetRound()
 
 def checkFolded():
@@ -632,7 +786,7 @@ def betRound(highestBet=0, PlayerID=-1):
 
 Players = ("Jon","David","Simon", "George")
 
-print(Players)
+#print(Players)
 # Player1 = Player(Players[0])
 # Player2 = Player(Players[1])
 
@@ -707,7 +861,7 @@ while(True):
 			highestBet, PlayerID, totCount = checkBets()
 		cardDeck.pop() # brun card before river
 		communityCards.append(cardDeck.pop()) # deal river card
-		print("this is the length of the community cars",len(communityCards))
+		#print("this is the length of the community cars",len(communityCards))
 		updateBalances()
 		checkWin()
 		time.sleep(1)
