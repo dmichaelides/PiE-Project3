@@ -1,0 +1,14 @@
+Hand values
+The following shows the possible hand values in increasing order.
+
+
+Highcard: Simple value of the card. Lowest: 2 - Highest: Ace
+Pair: Two cards with the same value
+Two pairs: Two times two cards with the same value
+Three of a kind: Three cards with the same value
+Straight: Sequence of 5 cards in increasing value (Ace can precede 2 and follow up King)
+Flush: 5 cards of the same suit
+Full house: Combination of three of a kind and a pair
+Four of a kind: Four cards of the same value
+Straight flush: Straight of the same suit
+Royal flush: Straight flush from Ten to Ace

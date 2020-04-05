@@ -10,6 +10,16 @@ I love poker, so I am going to create that game without considering how hard or 
 
 Here goes!
 
+The game below is a multi-player texas hold'em poker game.
+
+All players start with a 1000 balance, with a maximum of 10 players able to join the game. 
+
+Once a player's balance runs out, the player will not longer be able to play.
+
+It is a basic working poker game that undestands all the different ranks in poker, and is able to payout split pots. 
+
+It meets all the requirements for the final project in the Python is Easy course on Pirple.  
+
 """
 
 
@@ -17,6 +27,8 @@ Here goes!
 from random import shuffle
 import os
 import time
+import numpy as np
+import collections,numpy
 
 
 cardValues = {} # a dictionary showing each card as Key and a Tuple as value.  Tuple entities are (Card, Suit, Value).  Example: 2 of hearts is "2h":(2,'h',2)
@@ -25,6 +37,7 @@ Pot = 0
 communityCards = []
 smallBlind = 10
 bigBlind = 20
+# dealer = 0
 
 
 # create deck
@@ -40,64 +53,488 @@ def creatDeck():
 	for suit in cardSuit:
 		for card in range(2,11):
 			Deck.append(str(card)+(suit))
-			cardValues[str(card)+(suit)] = (card,suit,int(card))
+			cardValues[str(card)+(suit)] = (str(card),suit,int(card))
 		for card in faceValues:
 			Deck.append(card+suit)
 			if card == "J":
-				cardValues[card+suit] = (card,suit,11)
+				cardValues[card+suit] = ("w",suit,11)
 			if card == "Q":
-				cardValues[card+suit] = (card,suit,12)
+				cardValues[card+suit] = ("x",suit,12)
 			if card == "K":
-				cardValues[card+suit] = (card,suit,13)
+				cardValues[card+suit] = ("y",suit,13)
 			if card == "A":
-				cardValues[card+suit] = (card,suit,14)
+				cardValues[card+suit] = ("z",suit,14)
 									
 	shuffle(Deck)
 	return Deck
 
-
-
 cardDeck = creatDeck()
+#print(cardValues)
+#time.sleep(20)
 
-print(cardDeck,"\n\n")
-print(cardValues)
-
-
+# print(cardDeck,"\n\n")
+# print(cardValues)
 
 class Player:
 	"""docstring for Player"""
-	def __init__(self, name, hand = [], money=1000, isDealer=0):
+	def __init__(self, name, hand = [], finalCards = [], money=1000, isDealer=0):
 		self.name = name
 		self.money = money
 		self.hand = hand
 		self.isDealer = isDealer
-		# self.score = self.setScore()
+		self.finalCards = finalCards
+		self.score = self.setScore()
+		self.pokerHand = ""
 		self.folded = 0
 		self.bet = 0
+		self.potLevel = 1
 	 	
-
-	def __str__(self): #print (player)
-		currentHand = ""
-		for card in self.hand:
-			currentHand += str(card) + " "
+	def __str__(self): # print (player)
+		# currentHand = ""
+		# for card in self.hand:
+		# 	currentHand += str(card) + " "
 		# print(currentHand)		
-		finalStatus = currentHand + "score: " + str(self.score)
+		finalStatus = self.name + " is in the game with ", self.money, " Balance remaining."# + str(self.score)
 		# finalStatus = self.name
 
 		return finalStatus
 
-	# def setScore(self):
-	# 	self.score = 0
-	# 	aceCounter = 0
 
-	# 	for card in self.hand:
-	# 		self.score += cardValues[card][2]
-	# 		if card == "A":
-	# 			aceCounter += 1
-	# 		if self.score > 21 and aceCounter != 0:
-	# 			self.score -= 10
-	# 			aceCounter -= 1
-	# 	return self.score
+	def colFinalCards(self):
+		self.finalCards = [] 
+		for card in communityCards:
+			self.finalCards.append(card)
+		for card in self.hand:
+			self.finalCards.append(card)
+
+
+	def setScore(self):
+		# self.finalCards
+		addScore = 0
+		# self.pokerHand = ""
+		origCardList = []
+		for c in self.finalCards:
+			origCardList.append(c)
+		cardList = []
+		Rank = ""
+		fValues = [0]
+		for v in origCardList:
+			cardList.append(cardValues[v][0]+cardValues[v][1])
+		if self.checkMatches()[1] == "High":
+			Rank = "High Card"
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "OneP":
+			Rank = "One Pair"
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "TwoP":
+			Rank = "Two pairs"
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "Three":
+			Rank = "Three of a Kind"
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "STR":
+			Rank = "Straight"
+			fValues = self.checkMatches()[0]
+		if self.checkFlush() != False:
+			Rank = "Flush"
+			suitedValues = []
+			tempfValues = []
+			s = self.checkFlush()
+			for v in origCardList:
+				if cardValues[v][1] == s:
+					suitedValues.append(cardValues[v][2])
+			suitedValues.sort(reverse=True)
+			for i in range(5):
+				tempfValues.append(suitedValues[i])
+			fValues = tempfValues
+		if self.checkMatches()[1] == "FH":
+			Rank = "Full house"
+			fValues = self.checkMatches()[0]
+		if self.checkMatches()[1] == "FOAK":
+			Rank = "Four of a Kind"
+			fValues = self.checkMatches()[0]
+		if self.checkStrFlush(self.checkFlush()) != False:
+			Rank = "staightFlush"
+			fValues = self.checkStrFlush(self.checkFlush())
+		addScore = np.sum(fValues)
+		try:
+			if Rank == "High Card":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 0
+			if Rank == "One Pair":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 1060
+			if Rank == "Two pairs":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 2120
+			if Rank == "Three of a Kind":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 3180
+			if Rank == "Straight":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 4240
+			if Rank == "Flush":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 5300
+			if Rank == "Full house":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 6360
+			if Rank == "Four of a Kind":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 7420
+			if Rank == "staightFlush":
+				#s = np.sum(fValues)
+				#self.score += np.sum(fValues)
+				addScore += 8480
+		except TypeError:
+			pass
+		#print(self.name," has a ", Rank)
+		# print(fValues," these are the final values")
+		#time.sleep(3)
+		return addScore
+
+	def checkFlush(self):
+	    tempDict = {'d':0,'h':0,'s':0,'c':0}
+	    flushKey = "x"
+	    for k in self.finalCards:
+	        for j in tempDict:
+	            if cardValues[k][1] == j:
+	                tempDict[j] += 1
+	    #r = checkMatches()
+	    for k in tempDict:
+	    	if tempDict[k] >= 5:
+	    		flushKey = k
+	    if flushKey != "x":
+	    	return flushKey	
+	    else:
+	    	return False	        
+
+	def checkStrFlush(self,j):
+	    #suite = j
+	    suitedValues = []
+	    tempSuitedValues = []
+	    for k in self.finalCards:
+	        if cardValues[k][1] == j:
+	            suitedValues.append(cardValues[k][2])
+	            tempSuitedValues.append(cardValues[k][2])
+	    list.sort(suitedValues)
+	    list.sort(tempSuitedValues)
+	    if len(tempSuitedValues) >= 5:
+	        if tempSuitedValues[-1] == 14: # checks is there is an Ace
+	            tempSuitedValues.pop()
+	            #print(tempSuitedValues)
+	            checkList = [2,3,4,5]
+	            isLowStr = 0
+	            for k in checkList: # checks if the remaining four cards are 2,3,4,5
+	                if k not in tempSuitedValues:
+	                    #print("stop")
+	                    break
+	                else:
+	                    isLowStr += 1
+	            if isLowStr == 4:
+	                #print("lowest straight flsh")
+	                if 6 in tempSuitedValues:
+	                	suitedValues = [2,3,4,5,6]
+	                else:
+	                	suitedValues = [1,2,3,4,5]
+	    oneCount = 0
+	    oneInRow = 0
+	    previousOne = 0
+	    #print(suitedValues)
+	    #print(np.diff(b))
+	    peakStraight = 0
+	    valuesIndex = 0
+	    for i in np.diff(suitedValues): # when sorting and running np.diff, the array will be [1,1,1,1] if there is a straight
+	    	valuesIndex += 1
+	    	if i == 1:
+	    		oneCount += 1
+	    		if previousOne == 1:
+	    			oneInRow += 1
+	    			if oneInRow >= 3:
+	    				peakStraight = suitedValues[valuesIndex]
+	    		previousOne = 1
+	    	else:
+	    		previousOne = 0
+	    if oneInRow >= 3:
+	    	#print("this is a straight")
+	    	newValues = []
+	    	for n in range(5):
+	    		newValues.append(peakStraight)
+	    		peakStraight -= 1
+	    	suitedValues = newValues
+	    	return suitedValues
+	        #self.score += ###### need to set the straight flush level score here
+	        #print("there's a straight flush")
+	    else:
+	        return False
+
+	def getValueList(self):
+		origCardList = self.finalCards # self..
+		cardList = []
+		for v in origCardList:
+			cardList.append(cardValues[v][0]+cardValues[v][1])
+		#print(cardList)		
+		valueList = []
+		for a in cardList:
+			if a.find('z') == 0:
+				valueList.append(14)
+				continue
+			if a.find('y') == 0:
+				valueList.append(13)
+				continue
+			if a.find('x') == 0:
+				valueList.append(12)
+				continue
+			if a.find('w') == 0:
+				valueList.append(11)
+				continue
+			valueList.append(cardValues[a][2])
+		return valueList
+		#print(valueList,"   value list")
+	    
+	def checkMatches(self):
+	    b = self.getValueList()
+	    list.sort(b)
+	    zeroCount = 0
+	    zeroInRow = 0
+	    previousZero = 0
+	    valueListIndex = 0
+	    FOAK = []
+	    FH = []
+	    Three = []
+	    TwoP = []
+	    OneP = []
+	    #print(np.diff(b))
+	    for i in np.diff(b):
+	        valueListIndex += 1
+	        if i == 0:
+	            zeroCount += 1
+	            TwoP.append(b[valueListIndex])
+	            OneP.append(b[valueListIndex])
+	            FH.append(b[valueListIndex])
+	            if previousZero == 1:
+	                Three.append(b[valueListIndex])
+	                FH.append(b[valueListIndex])
+	                zeroInRow += 1
+	                if zeroCount == 3:
+	                	FOAK.append(b[valueListIndex])
+	            previousZero = 1
+	        else:
+	            previousZero = 0
+	    if zeroCount == 3:
+	        if zeroInRow == 2:
+	            #print(FOAK,self.name,"four of a kind")
+	            fNum = FOAK[0] # this is the four of a kind value
+	            rVal = [] # compose list of remaing values to eliminate smallest
+	            values = []
+	            for n in b:
+	                if n != fNum:
+	                    rVal.append(n)
+	            rVal.sort(reverse=True)
+	            rVal.pop()
+	            rVal.pop()
+	            for v in range(4):
+	                values.append(fNum)
+	            for f in rVal:
+	                values.append(f)
+	            #print(values,"four of a kind")
+	            #self.score += ##### four fo a king score
+	            return values,"FOAK" # four of a kind
+	        if zeroInRow == 1:
+	            #print(FH,"full house")
+	            a = FH[3]
+	            b = FH[0]
+	            values = []
+	            if collections.Counter(FH)[a] == 3:
+	                FH.append(b)
+	            if collections.Counter(FH)[b] == 3:
+	                FH.append(a)
+	            #print(FH,"full full house")
+	            #self.score += ##### full house score
+	            return FH,"FH" # full house
+	        if zeroInRow == 0:
+	            if self.checkStr() != False:
+	            	values = self.checkStr()
+	            	#print(self.name,"there's a straight")
+	            	return values,"STR" #straight
+	            else:
+	                #print(TwoP,"two pair")
+	                fList = TwoP
+	                fList.sort(reverse=True)
+	                if len(fList) == 3:
+	                    fList.pop()
+	                rVal = []
+	                values = []
+	                for n in b:
+	                    if n not in fList:
+	                        rVal.append(n)
+	                rVal.sort(reverse=True)
+	                rVal.pop()
+	                rVal.pop()
+	                for v in range(2):
+	                    values.append(fList[0])
+	                    values.append(fList[1])
+	                for f in rVal:
+	                    values.append(f)
+	                #print(values)
+	                #self.score += ##### two pair score
+	                return values,"TwoP" # two pair
+	    if zeroCount == 2:
+	        if zeroInRow == 1:
+	            if self.checkStr() != False:
+	            	values = checkStr()
+	            	#print(self.name,"there's a straight")
+	            	return values,"STR" #straight
+	            else:
+	                #print(Three,self.name,"three of a kind")
+	                fNum = Three[0] # this is the four of a kind value
+	                rVal = [] # compose list of remaing values to eliminate smallest
+	                values = []
+	                for n in b:
+	                	if n != fNum:
+	                		rVal.append(n)
+	                rVal.sort(reverse=True)
+	                rVal.pop()
+	                rVal.pop()
+	                for v in range(3):
+	                	values.append(fNum)
+	                for f in rVal:
+	                	values.append(f)
+	                #print(values,"three of a kind")
+	                #self.score += ##### three of a kind score
+	                return values,"Three" # three of a kind
+	        if zeroInRow == 0:
+	            if self.checkStr() != False:
+	            	values = self.checkStr()
+	            	#print(self.name,"there's a straight")
+	            	return values,"STR" #straight
+	            else:
+	                #print(TwoP,"two pair")
+	                fList = TwoP
+	                fList.sort(reverse=True)
+	                if len(fList) == 3:
+	                    fList.pop()
+	                rVal = []
+	                values = []
+	                for n in b:
+	                    if n not in fList:
+	                        rVal.append(n)
+	                rVal.sort(reverse=True)
+	                rVal.pop()
+	                rVal.pop()
+	                for v in range(2):
+	                    values.append(fList[0])
+	                    values.append(fList[1])
+	                for f in rVal:
+	                    values.append(f)
+	                #print(values)
+	                #self.score += ##### two pair score
+	                return values,"TwoP" # two pair
+	    if zeroCount == 1:
+	        if self.checkStr() != False:
+	        	values = self.checkStr()
+	        	#print(self.name,"there's a straight")
+	        	return values,"STR" #straight
+	        else:
+	            fNum = OneP[0] # this is the one pair of a kind value
+	            rVal = [] # compose list of remaing values to eliminate smallest
+	            values = []
+	            for n in b:
+	                if n != fNum:
+	                    rVal.append(n)
+	            rVal.sort(reverse=True)
+	            rVal.pop()
+	            rVal.pop()
+	            for v in range(2):
+	                values.append(fNum)
+	            for f in rVal:
+	                values.append(f)
+	            #print(values,"one pair")
+	            return values,"OneP" # one pair
+	    if zeroCount == 0:
+	        if self.checkStr() != False:
+	        	values = self.checkStr()
+	        	#print(self.name,"there's a straight")
+	        	return values,"STR" #straight
+	        else:
+	            #print(self.name,"high card")
+	            values = b
+	            values.sort(reverse=True)
+	            values.pop()
+	            values.pop()
+	            #self.score += ##### high card score
+	            return values,"High" # high
+	    #print(zeroCount," zerocount ",zeroInRow," inrow ")
+
+	def checkStr(self):
+		try:
+			values = []
+			tempValues = []
+			for i in self.getValueList():
+				values.append(i)
+				tempValues.append(i)
+			list.sort(values)
+			list.sort(tempValues)
+			if tempValues[-1] == 14: # checks is there is an Ace
+				tempValues.pop()
+				#print(tempValues)
+				checkList = [2,3,4,5]
+				isLowStr = 0
+				for k in checkList: # checks if the remaining four cards are 2,3,4,5
+					if k not in tempValues:
+						#print("stop")
+						break
+					else:
+						isLowStr += 1
+						#continue
+						#time.sleep(3)
+				if isLowStr == 4:
+					#print("lowest straight")
+					if 6 in tempValues:
+						values = [2,3,4,5,6]
+					else:
+						values = [1,2,3,4,5]
+			#print(np.diff(values))
+			#print(values)
+			oneCount = 0
+			oneInRow = 0
+			previousOne = 0
+			peakStraight = 0
+			valuesIndex = 0
+			#print(np.diff(b))
+			for i in np.diff(values): # when sorting and running np.diff, the array will be [1,1,1,1] if there is a straight
+				valuesIndex += 1
+				if i == 1:
+					oneCount += 1
+					if previousOne == 1:
+						oneInRow += 1
+						if oneInRow >= 3:
+							peakStraight = values[valuesIndex]
+					previousOne = 1
+				else:
+					previousOne = 0
+			if oneInRow >= 3:
+				#print("this is a straight")
+				newValues = []
+				for n in range(5):
+					newValues.append(peakStraight)
+					peakStraight -= 1
+				values = newValues
+				return True
+				#self.score += ###### need to set the straight level score here
+				#print("there's a straight ")
+			else:
+				return False		
+		except IndexError:
+			pass
 
 	def dealCard(self,card):
 		self.hand.append(card)
@@ -109,7 +546,6 @@ class Player:
 		# Pot += amount
 
 	# def pokerHand(self):
-
 
 def setTable():
 	setPlayersCount = input("Welcome to Texas Hold'em!\n\nHow many players are joining today? ")
@@ -130,243 +566,24 @@ def setTable():
 	return PlayersList
 
 
-def betRound():
-	highestBet, PlayerID, haveFolded = checkBets()
-	# highestBet = 0
-	# PlayerID = -1
-	# for s in activePlayers:
-	# 	if activePlayers[s].bet > highestBet:
-	# 		highestBet = activePlayers[s].bet
-	# 		PlayerID = int(s)
-	if highestBet > 0:
-		countTrip = 1 # this is used to check if the loop reaches the final player, and if the function needs to run again to collect bets from other players.
-		# IDCheck = PlayerID
-		while countTrip < len(activePlayers)+2 or haveFolded < len(activePlayers)-1:
-			# print("after while looop ...... before for loop.....")
-			for r in circle_iter(activePlayers,PlayerID+1):
-				# print("after for loop.......	")
-				# print("\n\nhighest bet is ",highestBet,"\n\nplayers bet is ",r.bet)
-				# print("\n\n",activePlayers["1"].name," bet is ",activePlayers["1"].bet)
-				# print("\n\n",activePlayers["2"].name," bet is ",activePlayers["2"].bet)
-				# print("\n\n",activePlayers["3"].name," bet is ",activePlayers["3"].bet)
-				# print("\n\n",activePlayers["4"].name," bet is ",activePlayers["4"].bet)
-				# print("\n\n",activePlayers["5"].name," bet is ",activePlayers["5"].bet)
-				# print("\n\n",activePlayers["6"].name," bet is ",activePlayers["6"].bet)
-				# print("\n\n",activePlayers["0"].name," bet is ",activePlayers["0"].bet)
-				if r.folded == 1:
-					countTrip += 1
-					continue
-				if r.bet == highestBet:
-					print("\n\n",r.name," The current bet is ", highestBet,"\n\n")
-					playerFinalChoice = input("Choose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n")
-					if playerFinalChoice == "1":
-						print("1 final choice")
-						updateBalances()
-						countTrip = len(activePlayers)+3
-						break
-					if playerFinalChoice == "2":
-						playerRaise = int(input("How much do you want to raise?\n\n"))
-						if playerRaise < highestBet*1.5:
-							print("Amount must be at least ",highestBet*1.5,"\n\n")
-							playerRaise = int(input("How much do you want to raise?\n\n"))
-						newBet = playerRaise - r.bet
-						r.betMoney(newBet)
-						highestBet = playerRaise
-						print("2 final choice")
-						highestBet, PlayerID = checkBets()
-						countTrip = 1
-						continue
-					if playerFinalChoice == "3":
-						r.folded = 1
-						haveFolded += 1 
-						print("3 final choice")
-						updateBalances()
-						countTrip = len(activePlayers)+3
-						break
-				if countTrip == len(activePlayers):
-					print("count trip has been reacheeeeeeed")
-					print("\n\n",r.name," The current bet is ", highestBet,"\n\n")
-					playerChoice = input("Choose an option.\n[1] Call\n[2] Raise\n[3] Fold\n\n")
-					if playerChoice == "2":
-						playerRaise = int(input("How much do you want to raise?\n\n"))
-						if playerRaise < highestBet*1.5:
-							print("Amount must be at least ",highestBet*1.5,"\n\n")	
-							playerRaise = int(input("How much do you want to raise?\n\n"))
-						newBet = playerRaise - r.bet
-						r.betMoney(newBet)
-						highestBet = playerRaise
-					if playerChoice == "1":
-						callBet = highestBet - r.bet
-						r.betMoney(callBet)
-					if playerChoice == "3":
-						r.folded = 1
-						haveFolded += 1
-						print("3 players choice fold")
-						if haveFolded == len(activePlayers)-1:
-							updateBalances()
-							checkWin()
-							countTrip = len(activePlayers)+3
-							break
-					countTrip = 1
-					continue
-				print("\n\n",r.name," The current bet is ", highestBet,"\n\n")
-				playerChoice = input("Choose an option.\n[1] Call\n[2] Raise\n[3] Fold\n\n")
-				if playerChoice == "2":
-					playerRaise = int(input("How much do you want to raise?\n\n"))
-					if playerRaise < highestBet*1.5:
-						print("Amount must be at least ",highestBet*1.5,"\n\n")	
-						playerRaise = int(input("How much do you want to raise?\n\n"))
-					newBet = playerRaise - r.bet
-					r.betMoney(newBet)
-					highestBet = playerRaise
-					countTrip += 1
-				if playerChoice == "1":
-					callBet = highestBet - r.bet
-					r.betMoney(callBet)
-					countTrip += 1
-				if playerChoice == "3":
-					r.folded = 1
-					haveFolded += 1
-					print("3 players choice fold")
-					if haveFolded == len(activePlayers)-1:
-						updateBalances()
-						checkWin()
-						countTrip = len(activePlayers)+3
-						print("is this where it for stuck???????????????????")
-						break
-					countTrip += 1
-	# if highestBet == 0:
-	# 	countTrip = 1 # this is used to check if the loop reaches the final player, and if the function needs to run again to collect bets from other players.
-	# 	# IDCheck = PlayerID
-	# 	while countTrip < len(activePlayers)+2 or haveFolded < len(activePlayers)-1:
-	# 		# print("after while looop ...... before for loop.....")
-	# 		for r in circle_iter(activePlayers,PlayerID+1):
-	# 			# print("after for loop.......	")
-	# 			# print("\n\nhighest bet is ",highestBet,"\n\nplayers bet is ",r.bet)
-	# 			# print("\n\n",activePlayers["1"].name," bet is ",activePlayers["1"].bet)
-	# 			# print("\n\n",activePlayers["2"].name," bet is ",activePlayers["2"].bet)
-	# 			# print("\n\n",activePlayers["3"].name," bet is ",activePlayers["3"].bet)
-	# 			# print("\n\n",activePlayers["4"].name," bet is ",activePlayers["4"].bet)
-	# 			# print("\n\n",activePlayers["5"].name," bet is ",activePlayers["5"].bet)
-	# 			# print("\n\n",activePlayers["6"].name," bet is ",activePlayers["6"].bet)
-	# 			# print("\n\n",activePlayers["0"].name," bet is ",activePlayers["0"].bet)
-	# 			if r.folded == 1:
-	# 				countTrip += 1
-	# 				continue
-	# 			if r.bet == highestBet:
-	# 				print("\n\n",r.name," The current bet is ", highestBet,"\n\n")
-	# 				playerFinalChoice = input("Choose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n")
-	# 				if playerFinalChoice == "1":
-	# 					print("1 final choice")
-	# 					updateBalances()
-	# 					countTrip = len(activePlayers)+3
-	# 					continue
-	# 				if playerFinalChoice == "2":
-	# 					playerRaise = int(input("How much do you want to raise?\n\n"))
-	# 					if playerRaise < highestBet*1.5:
-	# 						print("Amount must be at least ",highestBet*1.5,"\n\n")
-	# 						playerRaise = int(input("How much do you want to raise?\n\n"))
-	# 					newBet = playerRaise - r.bet
-	# 					r.betMoney(newBet)
-	# 					highestBet = playerRaise
-	# 					print("2 final choice")
-	# 					highestBet, PlayerID = checkBets()
-	# 					countTrip = 1
-	# 					continue
-	# 				if playerFinalChoice == "3":
-	# 					r.folded = 1
-	# 					haveFolded += 1 
-	# 					print("3 final choice")
-	# 					updateBalances()
-	# 					countTrip = len(activePlayers)+3
-	# 					continue
-	# 			if countTrip == len(activePlayers):
-	# 				print("count trip has been reacheeeeeeed")
-	# 				print("\n\n",r.name," The current bet is ", highestBet,"\n\n")
-	# 				playerChoice = input("Choose an option.\n[1] Call\n[2] Raise\n[3] Fold\n\n")
-	# 				if playerChoice == "2":
-	# 					playerRaise = int(input("How much do you want to raise?\n\n"))
-	# 					if playerRaise < highestBet*1.5:
-	# 						print("Amount must be at least ",highestBet*1.5,"\n\n")	
-	# 						playerRaise = int(input("How much do you want to raise?\n\n"))
-	# 					newBet = playerRaise - r.bet
-	# 					r.betMoney(newBet)
-	# 					highestBet = playerRaise
-	# 				if playerChoice == "1":
-	# 					callBet = highestBet - r.bet
-	# 					r.betMoney(callBet)
-	# 				if playerChoice == "3":
-	# 					r.folded = 1
-	# 					haveFolded += 1
-	# 					print("3 players choice fold")
-	# 					if haveFolded == len(activePlayers)-1:
-	# 						updateBalances()
-	# 						checkWin()
-	# 						countTrip = len(activePlayers)+3
-	# 						continue
-	# 				countTrip = 1
-	# 				continue
-	# 			print("\n\n",r.name," The current bet is ", highestBet,"\n\n")
-	# 			playerChoice = input("Choose an option.\n[1] Check\n[2] Bet\n[3] Fold\n\n")
-	# 			if playerChoice == "2":
-	# 				playerRaise = int(input("How much do you want to bet?\n\n"))
-	# 				if playerRaise < highestBet*1.5:
-	# 					print("Amount must be at least ",highestBet*1.5,"\n\n")	
-	# 					playerRaise = int(input("How much do you want to raise?\n\n"))
-	# 				newBet = playerRaise - r.bet
-	# 				r.betMoney(newBet)
-	# 				highestBet = playerRaise
-	# 				countTrip += 1
-	# 			if playerChoice == "1":
-	# 				callBet = highestBet - r.bet
-	# 				r.betMoney(callBet)
-	# 				countTrip += 1
-	# 			if playerChoice == "3":
-	# 				r.folded = 1
-	# 				haveFolded += 1
-	# 				print("3 players choice fold")
-	# 				if haveFolded == len(activePlayers)-1:
-	# 					updateBalances()
-	# 					checkWin()
-	# 					countTrip = len(activePlayers)+3
-	# 					continue
-	# 				countTrip += 1
-
-def checkBets():
-	highestBet = 0
-	PlayerID = -1
-	haveFolded = 0
-	for s in activePlayers:
-		if activePlayers[s].isDealer == 1:
-			tempPlayerID = int(s)
-		if activePlayers[s].folded == 1:
-			haveFolded += 1
-		if activePlayers[s].bet > highestBet:
-			highestBet = activePlayers[s].bet
-			PlayerID = int(s)
-	if highestBet == 0:
-		PlayerID = tempPlayerID
-	return highestBet, PlayerID, haveFolded
-
-
-def updateBalances():
-	global Pot
-	for b in activePlayers:
-		Pot += activePlayers[b].bet
-		activePlayers[b].bet = 0
-
-def checkWin():
-	global Pot
-	for w in activePlayers:
-		if activePlayers[w].folded == 0:
-			# we need to check the score
-			# if there is a tie, we need to split pot
-			activePlayers[w].money += Pot
-			print(activePlayers[w].name," has won ",Pot)
-			Pot = 0
-
-
-
+def openHelp():
+	os.system("cls")
+	print("------------------POKER HANDS RANKS------------------")
+	File = open("help.txt","r")
+	for line in File:
+		print(line,end="")
+	File.close()
+	print("-----------------------------------------------------")
+	try:
+		goBack = input("Type in '--return', to get back to the game\n\n")
+		if goBack != "--return":
+			raise Exception
+		else:
+			return
+	except Exception:
+		goBack = input("That input was incorrect.  Type '--return' and then press enter to return to the game.\n\n")
+	finally:
+		return
 
 
 def circle_iter(items, start=1): # defines where the loop should start from active players in a round
@@ -376,19 +593,264 @@ def circle_iter(items, start=1): # defines where the loop should start from acti
 		start += 1
 		if start == l+1: start = 1
 
+def updateBalances():
+	global Pot
+	for b in activePlayers:
+		Pot += activePlayers[b].bet
+		activePlayers[b].bet = 0
 
+def checkWin():
+	global Pot
+	finalScores = []
+	foldedCount = checkFolded() 
+	# for s in activePlayers:
+	# 	if activePlayers[s].score > highestScore:
+	# 		highestScore = activePlayers[s].score
+	if len(activePlayers)-1 == foldedCount:
+		# resetRound()
+		for w in activePlayers:
+			# print(activePlayers[w].isDealer," is dealer in checkwin........................................")
+			if activePlayers[w].folded == 0: 
+				# we need to check the score
+				# if there is a tie, we need to split pot
+				activePlayers[w].money += Pot
+				os.system("cls")
+				print(activePlayers[w].name," wins ",Pot)
+				for i in range(5):
+					print(".")
+					time.sleep(1)
+				print("Starting new round.....")
+				time.sleep(2)
+				Pot = 0
+		resetRound()
+	if len(communityCards) == 6:
+		for s in activePlayers:
+			if activePlayers[s].folded == 0:
+				finalScores.append(activePlayers[s].setScore())
+		finalScores.sort()
+		winPool = 0
+		for w in activePlayers:
+			if activePlayers[w].setScore() == finalScores[-1]:
+				winPool += 1
+		winAmount = int(Pot/winPool)
+		for w in activePlayers:
+			if activePlayers[w].folded == 1:
+				continue
+			#print(finalScores)
+			#time.sleep(3)
+			if activePlayers[w].setScore() == finalScores[-1]:
+				activePlayers[w].money += winAmount
+				os.system("cls")
+				print(activePlayers[w].name," has won", Pot," in this round!") # all players who qualify here split pot.
+				for i in range(5):
+					print(".")
+					time.sleep(2)
+				print("Starting new round.....") 
+				Pot = 0
+				time.sleep(2)
+		resetRound()
 
-# Players = setTable()
+def checkFolded():
+	folded = 0
+	for f in activePlayers:
+		if activePlayers[f].folded == 1:
+			folded += 1
+	return folded
 
-Players = ("Jon","David","Simon", "George","Vange","basil")
+def resetRound():
+	global communityCards,cardDeck
+	communityCards = []
+	cardDeck = creatDeck()
+	dealer = -1
+	for p in activePlayers:
+		if activePlayers[p].isDealer == 1:
+			dealer = p
+	tempCount = 0
+	for b in circle_iter(activePlayers,int(dealer)):
+		b.folded = 0
+		if tempCount == 0:
+			b.isDealer = 0
+		if tempCount == 1:
+			b.isDealer = 1
+		tempCount += 1
+		if b.money < smallBlind:
+			b.folded = 1
 
-print(Players)
+def checkBets():
+	# global haveFolded
+	highestBet = 0
+	PlayerID = -1
+	# haveFolded = haveFolded()
+	betMatch = 0
+	totCount = 0
+	for s in activePlayers:
+		# print(s)
+		if activePlayers[s].bet >= highestBet:
+			highestBet = activePlayers[s].bet
+			PlayerID = int(s)
+		if activePlayers[s].isDealer == 1:
+			tempPlayerID = int(s)
+		# if activePlayers[s].folded == 1:
+		# 	haveFolded += 1
+	for s in activePlayers:
+		if activePlayers[s].bet == highestBet and activePlayers[s].folded == 0:
+			betMatch += 1
+			# betMatch +=1
+	if highestBet == 0:
+		tempCount = 0
+		for i in circle_iter(activePlayers,int(tempPlayerID)):
+			if tempCount == 0:
+				PlayerID = int(list(activePlayers.keys())[list(activePlayers.values()).index(i)])
+			tempCount += 1
+	if highestBet > 0: # improvement needed here, code needs to be able to stop on the person who made the raise during the betRound function. 
+		tempCount = 0
+		for k in circle_iter(activePlayers,int(PlayerID)):
+			if tempCount == 1:
+				PlayerID = int(list(activePlayers.keys())[list(activePlayers.values()).index(k)])
+			tempCount += 1
+	totCount = checkFolded() + betMatch
+	return highestBet, PlayerID, totCount
 
-# ind = 1
-# for n in range(len(Players)):
-# 	Player1 = Player(Player[n])
+def betRound(highestBet=0, PlayerID=-1):
+	global Pot
+	highestBet = highestBet
+	PlayerID = PlayerID
+	# haveFolded = haveFolded()
+	helpScreen = 0
+	cycleCount = 0
+	while helpScreen == 0:
+		for r in circle_iter(activePlayers,PlayerID):
+			# for s in circle_iter(activePlayers,PlayerID):
+			# 	if s.folded == 1:
+			# 		haveFolded += 1
+			# print(checkFolded())
+			# time.sleep(2)
+			cycleCount += 1
+			if checkFolded() == len(activePlayers)-1:
+				haveFolded = checkFolded()
+				return haveFolded
+			else:
+				if r.folded == 0 and r.money != 0:
+					os.system("cls")
+					for s in activePlayers:
+						if r == activePlayers[s]:
+							continue
+						if activePlayers[s].folded == 1:
+							print("----------\n",activePlayers[s].name,":\nBALANCE = ",activePlayers[s].money,",\nFOLDED OUT OF ROUND")
+						if activePlayers[s].folded == 0:
+							print("----------\n",activePlayers[s].name,":\nBALANCE = ",activePlayers[s].money,",\nBET IN CURRENT ROUND: ",activePlayers[s].bet)
+					print("\n----------\nPOT TOTAL = ",Pot,"\n----------\n")
+					if len(communityCards) == 6:
+						tempComcards = []
+						for c in communityCards:
+							tempComcards.append(c)
+						tempComcards.pop()
+						print("\n----------\n\n\n\nCOMMUNITY CARDS\n=========================\n",tempComcards,"\n=========================\n")
+					else:
+						print("\n\n\n\nCOMMUNITY CARDS\n=========================\n",communityCards,"\n=========================\n")
+					print("\n\nCall is on ",r.name,"\n")
+					print("PLAYERS CARDS\n=========================\n",r.hand,"\n=========================\n")
+					if r.bet == highestBet:
+						print(r.name,", your current Balance is ",r.money,"\nChoose an option.\n")
+						try:
+							playerFinalChoice = input("[1] Check\n[2] Raise\n[3] Fold\n\n")
+							if playerFinalChoice == "--help":
+								helpScreen = 1
+								openHelp()
+								break
+							if 1 > int(playerFinalChoice) or int(playerFinalChoice) > 3:
+								raise ValueError
+						except Exception:
+							print("Choice should be a number: '1', '2' or '3'.\n\n")
+							playerFinalChoice = input("Choose an option.\n[1] Check\n[2] Raise\n[3] Fold\n\n")
+							if playerFinalChoice == "--help":
+								helpScreen = 1
+								openHelp()
+								break
+						if int(playerFinalChoice) == 1:
+							print(r.name,"Checks")
+						if int(playerFinalChoice) == 2:
+							playerRaise = int(input("How much do you want to raise?\n\n"))
+							if playerRaise < highestBet*1.5:
+								print("Amount must be at least ",highestBet*1.5,"\n\n")
+								playerRaise = int(input("How much do you want to raise?\n\n"))
+							if playerRaise > r.money:
+								print("Easy tiger, you don't have that much money.\n\n Your available balance is ",r.money,"\n\n")
+								playerRaise = int(input("How much do you want to raise?\n\n"))
+							newBet = playerRaise - r.bet
+							r.betMoney(newBet)
+							highestBet = playerRaise
+							print(r.name," has raised the bet to ",newBet)
+						if int(playerFinalChoice) == 3:
+							r.folded = 1
+							print(r.name," has folded.")
+						time.sleep(1)
+					if r.bet < highestBet:
+						if highestBet - r.bet >= r.money:
+							print(r.name," your avaiable Balance is ",r.money,"\n\nChoose an option.\n")
+							try:
+								playerFinalChoice = input("[1] All-in\n[2] Fold\n")
+								if 1 > int(playerFinalChoice) or int(playerFinalChoice) > 2:
+									raise ValueError
+							except Exception:
+								print("Choice should be a number: '1' or '2'.\n\n")
+								playerFinalChoice = input("[1] All-in\n[2] Fold\n\n")
+							if int(playerFinalChoice) == 1:
+								newBet = r.money
+								r.betMoney(newBet)			
+								print(r.name," is All-in!")
+							if int(playerFinalChoice) == 2:
+								r.folded = 1
+								print(r.name," has folded.")
+						if highestBet - r.bet < r.money:
+							print(r.name," do you want to call for extra ",highestBet - r.bet,", raise or fold?\n","Your current Balance is ",r.money,"\n\nChoose an option.\n")
+							try:
+								playerFinalChoice = input("[1] Call\n[2] Raise\n[3] Fold\n\n")
+								if playerFinalChoice == "--help":
+									helpScreen = 1
+									openHelp()
+									break
+								if 1 > int(playerFinalChoice) or int(playerFinalChoice) > 3:
+									raise ValueError
+							except Exception:
+								print("Choice should be a number: '1', '2' or '3'.\n\n")
+								playerFinalChoice = input("[1] Call\n[2] Raise\n[3] Fold\n\n")
+								if playerFinalChoice == "--help":
+									helpScreen = 1
+									openHelp()
+									break
+							if int(playerFinalChoice) == 1:
+								newBet = highestBet - r.bet
+								r.betMoney(newBet)			
+								print(r.name," Calls bet ", newBet)
+							if int(playerFinalChoice) == 2:
+								playerRaise = int(input("How much do you want to raise?\n\n"))
+								if playerRaise < highestBet*1.5:
+									print("Amount must be at least ",highestBet*1.5,"\n\n")
+									playerRaise = int(input("How much do you want to raise?\n\n"))
+								if playerRaise > r.money:
+									print("Easy tiger, you don't have that much money.\n\n Your available balance is ",r.money,"\n\n")
+									playerRaise = int(input("How much do you want to raise?\n\n"))
+								newBet = playerRaise - r.bet
+								r.betMoney(newBet)
+								highestBet = playerRaise
+								print(r.name," has raised the bet to ",newBet)
+							if int(playerFinalChoice) == 3:
+								r.folded = 1
+								print(r.name," has folded.")
+						time.sleep(1)
+					if cycleCount == len(activePlayers):
+						if checkBets()[2] == len(activePlayers):
+							return
+
+Players = ("Jon","David","Simon", "George")
+
+#print(Players)
+# Player1 = Player(Players[0])
+# Player2 = Player(Players[1])
+
 try:
-	Player1 = Player(Players[0]) 
+	Player1 = Player(Players[0])
 	Player2 = Player(Players[1])
 	Player3 = Player(Players[2])
 	Player4 = Player(Players[3])
@@ -422,331 +884,100 @@ for p in range(len(Players)):
 	if p == 1:
 		activePlayers = {"1":Player1,"2":Player2}
 
-
-print(Player4.name,"\n\n========")
-Player1.isDealer = 1 #start off with Player 1 as the dealer
-
-# deal2test = [cardDeck.pop(),cardDeck.pop()]
-
-time.sleep(1)
-
-
-# Player1.hand = [cardDeck.pop()]
-# activePlayers["2"].hand = cardDeck.pop()
-
-# Player1.dealCard(cardDeck.pop())
-
-
-
-# print(Player1.hand)
-# print(Player2.hand)
-# # for i in range(2):
-
-# print(activePlayers)
-
-# for n in activePlayers:
-# 	print(activePlayers[n].isDealer,activePlayers[n].name)
-# 	activePlayers[n].hand = cardDeck.pop()
-
-# print(cardDeck)
-
-# for p in activePlayers:
-# 	print(activePlayers[p].hand, activePlayers[p].name)
-
-
-
-# for p in Players:
-# 	p = Player(cardDeck.pop())
-
-
-# highestBet = max(p.bet in Players)
-
-# print(highestBet)
-
-# def betRound():
-# 	while(True):
-
-# for i in range(3): # deal the flop
-# 	communityCards.append(cardDeck.pop())
-
-print(str(len(communityCards))," = cards on the floor")
-
-
+activePlayers["1"].isDealer = 1
 
 while(True):
-	dealer = 0
-	# print("how about this????????????????")
-	while dealer < len(Players)+1:
-		if len(communityCards) == 5:
-			print(communityCards)
-			# define the winner of the round
-			# adjust losers and winner/s balance
-			# cardDeck = creatDeck()
-			communityCards = []
-			dealer += 1
-			for p in activePlayers:
-				if activePlayers[p].isDealer == 1:
-					activePlayers[p].isDealer = 0
-					if p == str(len(Players)+1):
-						p = -1
-					activePlayers[str(int(p)+1)].isDealer = 1
-			print("========= in the river=============")
-		if len(communityCards) == 4:
-			# if Pot == 0:
-			# 	continue
-			cardDeck.pop() # brun card before river
-			communityCards.append(cardDeck.pop()) # deal river card
-			print("========= in the turn=============")
-			print(communityCards)
-			betRound()
-			continue
-		if len(communityCards) == 3:
-			# if Pot == 0:
-			# 	break
-			cardDeck.pop() # burn card before turn
-			communityCards.append(cardDeck.pop()) # deal turn card
-			print("========= in the flop=============")
-			print(communityCards)
-			betRound()
-			continue
-		else:
-			for p in activePlayers:
-				if activePlayers[p].isDealer == 1:
-					if len(Players) - dealer == 2:
-						small = int(p)
-						big = 1
-					if len(Players) - dealer == 1:
-						small = 1
-						big = 2
-					else:
-						small = int(p)+1
-						big = int(p)+2
-					activePlayers[str(small)].betMoney(smallBlind)
-					activePlayers[str(big)].betMoney(bigBlind)
-					for dealCards in range(2): #deal two card to each player
-						for d in circle_iter(activePlayers,int(p)+1):
-							if dealCards == 0:
-								d.hand = [cardDeck.pop()]
-							else:
-								d.dealCard(cardDeck.pop())
-								print(d.hand,d.name,d.bet," = BET",d.money," = BALANCE")
-								# time.sleep(1)
-					# dealer += 1
-					# activePlayers[p].isDealer = 0
-					# if p == str(len(Players)+1):
-					# 	p = -1
-					# activePlayers[str(int(p)+1)].isDealer = 1
-					break
-			cardDeck.pop() # burn one card before the flop
-			for i in range(3): # deal the flop
-				communityCards.append(cardDeck.pop())
-			print(communityCards)
-			# time.sleep(1)
-			betRound()
-			print("do you reach this??????????????")
-
-
-
-# 	Player1.play(firstHand)
-# 	House.play(secondHand)
-
-# 	Bet = int(input("Please enter your bet: "))
-
-# 	Player1.betMoney(Bet)
-
-# 	print(cardDeck)
-# 	print(Player1,Player1.money)
-# 	printHouse(House)
-
-# 	if Player1.hasBlackjack():
-# 		if House.hasBlackjack():
-# 			Player1.draw()
-# 		else:
-# 			Player1.win(True)
-# 	else:
-# 		while(Player1.score < 21):
-# 			action = input("Do you want another card? (y/n)?: ")
-# 			if action == "y":
-# 				Player1.hit(cardDeck.pop())
-# 				print(Player1)
-# 				printHouse(House)
-# 			else:
-# 				break
-# 		while (House.score < 17):
-# 			print(House)
-# 			House.hit(cardDeck.pop())
-		
-# 		if Player1.score > 21:
-# 			if House.score > 21:
-# 				Player1.draw()
-# 			else:
-# 				Player1.win(False)
-		
-# 		elif Player1.score > House.score:
-# 			Player1.win(True)
-
-# 		elif Player1.score == House.score:
-# 			Player1.draw()
-
-# 		else:
-# 			if House.score > 21:
-# 				Player1.win(True)
-# 			else:
-# 				Player1.win(False)
-
-
-
-
-
-
-
-'''
-
-
-##############  BLACKJACK BELOW   ##############
-
-
-
-
-class Player:
-
-	def __init__ (self,hand = [] ,money = 100):
-		self.hand = hand
-		self.score = self.setScore()
-		self.money = money
-		self.bet = 0
-
-	def __str__(self): #print (player)
-		currentHand = ""
-		for card in self.hand:
-			currentHand += str(card) + " "
-
-		finalStatus = currentHand + "score: " + str(self.score)
-
-		return finalStatus
-
-	def setScore(self):
-
-		self.score = 0
-		aceCounter = 0
-
-		faceCardsDict = {"A":11,"J":10,"K":10,"Q":10,"10":10,"9":9,"8":8,"7":7,"6":6,"5":5,"4":4,"3":3,"2":2}
-		for card in self.hand:
-			self.score += faceCardsDict[card]
-			if card == "A":
-				aceCounter += 1
-			if self.score > 21 and aceCounter != 0:
-				self.score -= 10
-				aceCounter -= 1
-		return self.score
-
-	def hit(self,card):
-		self.hand.append(card)
-		self.score = self.setScore()
-
-	def play(self,newHand):
-		self.hand = newHand
-		self.score = self.setScore()
-
-	def betMoney(self,amount):
-		self.money -= amount #Money 100; (bet(20)
-		self.bet += amount # Money 100->80 bet 0 ->20
-
-	def win(self,result):
-		if result == True:
-			if self.score == 21 and len(self.hand) == 2:
-				self.money += 2.5*self.bet
-			else:
-				self.money += 2*self.bet
-			self.bet = 0
-		else:
-			self.bet = 0
-	def draw(self):
-		self.money += self.bet
-		self.bet = 0
-
-	def hasBlackjack(self):
-		if self.score == 21 and len(self.hand) == 2:
-			return True
-		else:
-			return False
-
-def printHouse(House):
-	for card in range(len(House.hand)):
-		if card == 0:
-			print("#",end=" ")
-		elif card == len(House.hand) - 1:
-			print(House.hand[card])
-		else:
-			print(House.hand[card],end=" ")
-
-
-cardDeck = creatDeck()
-
-firstHand = [cardDeck.pop(),cardDeck.pop()]
-secondHand = [cardDeck.pop(),cardDeck.pop()]
-
-Player1 = Player(firstHand)
-House = Player(secondHand)
-
-cardDeck = creatDeck()
-
-while(True):
-	if len(cardDeck) < 20:
-		cardDeck = creatDeck()
-	firstHand = [cardDeck.pop(),cardDeck.pop()]
-	secondHand = [cardDeck.pop(),cardDeck.pop()]
-
-	Player1.play(firstHand)
-	House.play(secondHand)
-
-	Bet = int(input("Please enter your bet: "))
-
-	Player1.betMoney(Bet)
-
-	print(cardDeck)
-	print(Player1,Player1.money)
-	printHouse(House)
-
-	if Player1.hasBlackjack():
-		if House.hasBlackjack():
-			Player1.draw()
-		else:
-			Player1.win(True)
-	else:
-		while(Player1.score < 21):
-			action = input("Do you want another card? (y/n)?: ")
-			if action == "y":
-				Player1.hit(cardDeck.pop())
-				print(Player1)
-				printHouse(House)
-			else:
+	if len(communityCards) == 5:
+		os.system("cls")
+		print("\n\nDEALING THE RIVER\n\n")
+		time.sleep(1)
+		os.system("cls")
+		for d in activePlayers:
+			activePlayers[d].colFinalCards()
+			activePlayers[d].setScore()
+		# for d in activePlayers:
+		# 	print(activePlayers[d].finalCards)
+		communityCards.append(cardDeck.pop()) # deal extra card to trigger round reset in the checkWin funtion
+		highestBet, PlayerID, totCount = checkBets()
+		totCount = 0
+		while totCount < len(activePlayers):
+			betRound(highestBet,PlayerID)
+			if checkFolded() == len(activePlayers) - 1:
 				break
-		while (House.score < 17):
-			print(House)
-			House.hit(cardDeck.pop())
-		
-		if Player1.score > 21:
-			if House.score > 21:
-				Player1.draw()
-			else:
-				Player1.win(False)
-		
-		elif Player1.score > House.score:
-			Player1.win(True)
-
-		elif Player1.score == House.score:
-			Player1.draw()
-
-		else:
-			if House.score > 21:
-				Player1.win(True)
-			else:
-				Player1.win(False)
-
-
-
-	print(House)
-	print(Player1.money)	
-
-'''
+			highestBet, PlayerID, totCount = checkBets()
+		updateBalances()
+		checkWin()
+		time.sleep(1)
+	if len(communityCards) == 4:
+		os.system("cls")
+		print("\n\nDEALING THE TURN\n\n")
+		time.sleep(1)
+		os.system("cls")
+		highestBet, PlayerID, totCount = checkBets()
+		totCount = 0
+		while totCount < len(activePlayers):
+			betRound(highestBet,PlayerID)
+			highestBet, PlayerID, totCount = checkBets()
+		cardDeck.pop() # brun card before river
+		communityCards.append(cardDeck.pop()) # deal river card
+		#print("this is the length of the community cars",len(communityCards))
+		updateBalances()
+		checkWin()
+		time.sleep(1)
+		# betRound()
+		# continue
+	if len(communityCards) == 3:
+		# 	break
+		os.system("cls")
+		print("\n\nDEALING THE FLOP\n\n")
+		time.sleep(1)
+		os.system("cls")
+		highestBet, PlayerID, totCount = checkBets()
+		totCount = 0
+		while totCount < len(activePlayers):
+			betRound(highestBet,PlayerID)
+			if checkFolded() == len(activePlayers) - 1:
+				break
+			highestBet, PlayerID, totCount = checkBets()
+			#print("highest bet = ",highestBet,"......... player ID = ", PlayerID, ".............have folded = ", haveFolded, "\n........total count = ", totCount,".......active players = ", len(activePlayers))
+		cardDeck.pop() # burn card before turn
+		communityCards.append(cardDeck.pop()) # deal turn card
+		updateBalances()
+		checkWin()
+		time.sleep(1)
+		# betRound()
+		# continue
+	if len(communityCards) < 3:
+		os.system("cls")
+		print("\n\nDEALING PLAYERS CARDS\n\n")
+		time.sleep(1)
+		os.system("cls")
+		for p in activePlayers:
+			if activePlayers[p].isDealer == 1:
+				tempCount = 0
+				for blinds in circle_iter(activePlayers,int(p)):
+					if tempCount == 0:
+						blinds.betMoney(smallBlind)
+					if tempCount == 1:
+						blinds.betMoney(bigBlind)
+					tempCount += 1 
+				for dealCards in range(2): #deal two card to each player
+					for d in circle_iter(activePlayers,int(p)):
+						if dealCards == 0:
+							d.hand = [cardDeck.pop()]
+						else:
+							d.dealCard(cardDeck.pop())
+				break
+		highestBet, PlayerID, totCount = checkBets()
+		while totCount < len(activePlayers):
+			betRound(highestBet,PlayerID)
+			# print("have folder have folded have folded     ", checkFolded())
+			time.sleep(2)
+			if checkFolded() == len(activePlayers) - 1:
+				break
+			highestBet, PlayerID, totCount = checkBets()
+		cardDeck.pop() # burn one card before the flop
+		for i in range(3): # deal the flop
+			communityCards.append(cardDeck.pop())
+		updateBalances()
+		checkWin()
