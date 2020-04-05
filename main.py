@@ -16,7 +16,7 @@ All players start with a 1000 balance, with a maximum of 10 players able to join
 
 Once a player's balance runs out, the player will not longer be able to play.
 
-It is a basic working poker game that undestands all the different ranks in poker, and is able to payout split pots. 
+It is a basic working poker game that undestands all the different ranks in poker, scores players accordingly and is able to payout split pots if necessary. 
 
 It meets all the requirements for the final project in the Python is Easy course on Pirple.  
 
@@ -87,7 +87,7 @@ class Player:
 		self.pokerHand = ""
 		self.folded = 0
 		self.bet = 0
-		self.potLevel = 1
+		#self.potLevel = 1
 	 	
 	def __str__(self): # print (player)
 		# currentHand = ""
@@ -548,9 +548,10 @@ class Player:
 	# def pokerHand(self):
 
 def setTable():
-	setPlayersCount = input("Welcome to Texas Hold'em!\n\nHow many players are joining today? ")
-	if 2 > setPlayersCount > 10:
-		setPlayersCount = input("There should be at least TWO and not more than TEN players!\n\nHow many players are joining today?")
+	os.system("cls")
+	setPlayersCount = input("Welcome to Texas Hold'em!\n\nHow many players are joining today? \n\n")
+	if 2 > int(setPlayersCount) > 10:
+		setPlayersCount = input("There should be at least TWO and not more than TEN players!\n\nHow many players are joining today?\n\n")
 	PlayersList = []
 	print("Great! Let's get all your names.\n\n")
 	time.sleep(2)
@@ -726,11 +727,13 @@ def betRound(highestBet=0, PlayerID=-1):
 			# print(checkFolded())
 			# time.sleep(2)
 			cycleCount += 1
+			#print(cycleCount)
+			#time.sleep(2)
 			if checkFolded() == len(activePlayers)-1:
 				haveFolded = checkFolded()
 				return haveFolded
 			else:
-				if r.folded == 0 and r.money != 0:
+				if r.folded == 0:
 					os.system("cls")
 					for s in activePlayers:
 						if r == activePlayers[s]:
@@ -839,11 +842,12 @@ def betRound(highestBet=0, PlayerID=-1):
 								r.folded = 1
 								print(r.name," has folded.")
 						time.sleep(1)
-					if cycleCount == len(activePlayers):
+					if cycleCount >= len(activePlayers):
 						if checkBets()[2] == len(activePlayers):
 							return
 
-Players = ("Jon","David","Simon", "George")
+#Players = ("Jon","David","Simon", "George")
+Players = setTable()
 
 #print(Players)
 # Player1 = Player(Players[0])
